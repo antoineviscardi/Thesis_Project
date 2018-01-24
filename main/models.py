@@ -38,16 +38,13 @@ class AssessmentMethod(models.Model):
 
 class Department(models.Model):
     name = models.CharField(max_length=50)
-    start_date = models.DateField()
+    start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField(blank=True, null=True)
-    current_flag = models.BooleanField()
 
 class Profile(models.Model):
     departmentID = models.ForeignKey(Department, on_delete=models.PROTECT)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    start_date = models.DateField()
-    end_date = models.DateField(blank=True, null=True)
-    current_flag = models.BooleanField()
+    start_date = models.DateField(auto_now_add=True)
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
@@ -90,6 +87,7 @@ class Course_AssessmentMethod(models.Model):
     end_date = models.DateField(blank=True, null=True)
     current_flag = models.BooleanField()
 
+'''
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -98,5 +96,6 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+'''
 
 
