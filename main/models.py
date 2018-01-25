@@ -40,6 +40,8 @@ class Department(models.Model):
     name = models.CharField(max_length=50)
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField(blank=True, null=True)
+    def __str__(self):
+        return self.name
 
 class Profile(models.Model):
     departmentID = models.ForeignKey(Department, on_delete=models.PROTECT)
@@ -50,10 +52,11 @@ class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
     userID = models.ForeignKey(User, on_delete=models.PROTECT)
     departmentID = models.ForeignKey(Department, on_delete=models.PROTECT)
-    start_date = models.DateField()
+    start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField(blank=True, null=True)
-    current_flag = models.BooleanField()
-
+    def __str__(self):
+        return self.ID
+    
 class Utilized(models.Model):
     indicatorID = models.ForeignKey(Indicator, on_delete=models.PROTECT)
     courseID = models.ForeignKey(Course, on_delete=models.PROTECT)

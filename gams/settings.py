@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'main.apps.MainConfig',
+    'submit.apps.SubmitConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -124,5 +125,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Redirect to home URL after login
-LOGIN_REDIRECT_URL = 'submit/'
+# Redirect to submit URL after login
+LOGIN_REDIRECT_URL = '/submit/'

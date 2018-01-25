@@ -1,5 +1,7 @@
 lib/
 bin/
 include/
-**/__pycache__
+
+**/__pychache__/
+
 **/migrations
