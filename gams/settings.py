@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'main.apps.MainConfig',
+    'gamanagement.apps.GamanagementConfig',
     'submit.apps.SubmitConfig',
     'django.contrib.admin',
     'django.contrib.auth',
