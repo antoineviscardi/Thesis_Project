@@ -1,9 +1,0 @@
-{% if assessments %}
-    <ul>
-        {% for a in assessments %}
-            <li><a href="assessment/{{a.pk}}/">{{a.course}}: {{a.assessmentMethod.indicator}}</a> - {{a.assessmentMethod.indicator.description}}
-        {% endfor %}
-    </ul>
-{% else %}
-    <p> No classes are available </p>
-{% endif %}

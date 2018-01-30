@@ -1,0 +1,44 @@
+<h2>{{object.courseID}}</h1>
+
+<div border>
+<h3>Indicators introduced</h3>
+</div>
+
+<div>
+<h3>Indicators taught</h3>
+</div>
+
+<div>
+<h3>Indicators utilized</h3>
+</div>
+
+<div>
+<h3>Indicators assessed</h3>
+
+{% for am, form, apk in list %}
+
+     <h4>{{am.indicator}}</h4>
+
+     <h5>Description</h5>
+     {{am.indicator.description}} 
+
+     <h5>Expectations</h5>
+     <p><b> Exceeds Expectations - 4: </b> {{am.expectation4}} </p>
+     <p><b> Meets Expectations- 3: </b> {{am.expectation3}} </p>  
+     <p><b> Needs Imprvovment - 2: </b> {{am.expectation2}} </p>
+     <p><b> Unacceptable - 1: </b> {{am.expectation1}} </p>
+     
+     <h5>Assessment</h5>
+     
+     <form action="" method="post">
+     {% csrf_token %}
+        {{form.as_p}}
+        <input type="submit" value="Update"/>
+        <input type="hidden" value="{{apk}}" name="apk"/>
+    </form>
+
+{% empty %}
+    <p> No indicators for this class </p>
+{% endfor %}
+
+</div>

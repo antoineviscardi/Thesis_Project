@@ -41,12 +41,14 @@ class Department(models.Model):
         return self.name
 
 class Profile(models.Model):
+    course = models.ManyToManyField('Course')
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     start_date = models.DateField(auto_now_add=True)
 
 class Course(models.Model):
     courseID = models.CharField(max_length=20)
+    assessmentMethod = models.ManyToManyField(AssessmentMethod)
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField(blank=True, null=True)
@@ -88,6 +90,5 @@ class Assessment(models.Model):
     
     def get_absolute_url(self):
         return reverse('assessments-view')
-
 
 

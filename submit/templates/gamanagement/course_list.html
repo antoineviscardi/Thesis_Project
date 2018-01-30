@@ -1,0 +1,9 @@
+<h1>Courses</h1>
+<ul>
+{% for course in object_list %}
+    <a href="course/{{course.pk}}">{{course}}</a>
+    </br>    
+{% empty %}
+    <p> No classes are available </p>
+{% endfor %}
+</ul>

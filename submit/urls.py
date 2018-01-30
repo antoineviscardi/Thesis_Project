@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     #path('', views.department_view),
     #path('', views.courses_view),
-    path('', views.assessments_view, name='assessments-view'),
-    path('assessment/<int:pk>/', login_required(views.AssessmentUpdate.as_view()), name='assessment-update')
+    path('', login_required(views.CourseListView.as_view())),
+    #path('assessment/<int:pk>/', login_required(views.AssessmentUpdate.as_view()), name='assessment-update'),
+    path('course/<int:pk>/', login_required(views.CourseDetailView.as_view()))
 ]
