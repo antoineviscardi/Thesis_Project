@@ -20,10 +20,10 @@ class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
     ID = models.CharField(max_length=20, primary_key=True)
     description = models.CharField(max_length=1000)
-    introduced = models.ManyToManyField('Course', related_name='introduces')
-    taught = models.ManyToManyField('Course', related_name='taught')
-    used = models.ManyToManyField('Course', related_name='used')
-    assessed = models.ManyToManyField('Course', through='AssessmentMethod')
+    introduced = models.ManyToManyField('Course', related_name='introduces', blank=True)
+    taught = models.ManyToManyField('Course', related_name='taught', blank=True)
+    used = models.ManyToManyField('Course', related_name='used', blank=True)
+    assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
     current_flag = models.BooleanField(default=True)
     def __str__(self):
         return self.ID
@@ -77,7 +77,7 @@ class Assessment(models.Model):
     department = models.ForeignKey(Department, on_delete=models.PROTECT)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    teacher = models.ForeignKey(User, on_delete=models.PROTECT)
     numOf4 = models.PositiveSmallIntegerField(blank=True, null=True)
     numOf3 = models.PositiveSmallIntegerField(blank=True, null=True)
     numOf2 = models.PositiveSmallIntegerField(blank=True, null=True)
@@ -89,7 +89,10 @@ class Assessment(models.Model):
 class SemesterLU(models.Model):
     year = models.CharField(max_length=4, default=datetime.datetime.now().year)
     semester = models.CharField(max_length=1, choices=SEASON_CHOICES)
-
+    class Meta:
+        get_latest_by = ['year', 'semester']
+    
+    
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
