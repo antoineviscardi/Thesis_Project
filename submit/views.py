@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from gamanagement.models import Assessment, Course
-from gamanagement.forms import AssessmentForm
+from ga.models import Assessment, Course
+from ga.forms import AssessmentForm
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView

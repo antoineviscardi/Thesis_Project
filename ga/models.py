@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
+from django.db.models.signals import post_save
 import datetime
 
 AYEAR_CHOICES = (('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'))
@@ -13,17 +14,20 @@ class Attribute(models.Model):
     description = models.CharField(max_length=1000, blank=True)
     current_flag = models.BooleanField(default=True)
     def __str__(self):
-        return self.attributeID + ' ' + self.name
+        return self.ID + ' ' + self.name
 
 class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
-    course = models.ManyToManyField('Course', through='Indicator_Course')
-    ID = models.CharField(max_length=20)
+    ID = models.CharField(max_length=20, primary_key=True)
     description = models.CharField(max_length=1000)
+    introduced = models.ManyToManyField('Course')
+    taught = models.ManyToManyField('Course', related_name='indicator_taught')
+    used = models.ManyToManyField('Course', related_name='indicator_used')
     current_flag = models.BooleanField(default=True)
     def __str__(self):
-        return self.indicatorID
+        return self.ID
 
+'''
 class Indicator_Course(models.Model):
     indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
     course = models.ForeignKey('Course', on_delete=models.CASCADE)
@@ -33,6 +37,7 @@ class Indicator_Course(models.Model):
     assessmentMethod = models.OneToOneField('AssessmentMethod', 
                                             on_delete=models.PROTECT,
                                             null=True)
+ '''
     
 class AssessmentMethod(models.Model):
     criteria = models.CharField(max_length=1000)
@@ -51,19 +56,21 @@ class Department(models.Model):
         return self.name
 
 class Profile(models.Model):
-    course = models.ManyToManyField('Course')
-    department = models.ManyToManyField('Department')
+    department = models.ManyToManyField('Department', blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    def __str__(self):
+        return self.user.first_name + ' ' + self.user.last_name
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
     department = models.ManyToManyField(Department)
+    teachers = models.ManyToManyField(Profile, blank=True)
     current_flag = models.BooleanField(default=True)
     def __str__(self):
-        return self.courseID
+        return self.ID
 
 class Assessment(models.Model):
-    indicator_course = models.ForeignKey(Indicator_Course, 
+    assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     numOf4 = models.PositiveSmallIntegerField(blank=True, null=True)
@@ -79,3 +86,8 @@ class SemesterLU(models.Model):
     semester = models.CharField(max_length=1, choices=SEASON_CHOICES)
 
 
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+post_save.connect(create_user_profile, sender=User)
