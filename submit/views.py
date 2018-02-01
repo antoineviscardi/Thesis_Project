@@ -15,12 +15,9 @@ class AssessmentUpdate(UpdateView):
     fields = ['numOf4', 'numOf3', 'numOf2', 'numOf1']
 
 
-
-
-
 class CourseListView(ListView):
     def get_queryset(self):
-        return self.request.user.profile.course.all()
+        return self.request.user.profile.course_set.all()
         
 
 class CourseDetailView(DetailView):

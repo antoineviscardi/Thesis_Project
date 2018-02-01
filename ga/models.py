@@ -20,9 +20,10 @@ class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
     ID = models.CharField(max_length=20, primary_key=True)
     description = models.CharField(max_length=1000)
-    introduced = models.ManyToManyField('Course')
-    taught = models.ManyToManyField('Course', related_name='indicator_taught')
-    used = models.ManyToManyField('Course', related_name='indicator_used')
+    introduced = models.ManyToManyField('Course', related_name='introduces')
+    taught = models.ManyToManyField('Course', related_name='taught')
+    used = models.ManyToManyField('Course', related_name='used')
+    assessed = models.ManyToManyField('Course', through='AssessmentMethod')
     current_flag = models.BooleanField(default=True)
     def __str__(self):
         return self.ID
@@ -40,6 +41,8 @@ class Indicator_Course(models.Model):
  '''
     
 class AssessmentMethod(models.Model):
+    indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
+    course = models.ForeignKey('course', on_delete=models.PROTECT)
     criteria = models.CharField(max_length=1000)
     expectation4 = models.CharField(max_length=1000)
     expectation3 = models.CharField(max_length=1000)
@@ -49,6 +52,7 @@ class AssessmentMethod(models.Model):
                                  choices=AYEAR_CHOICES)
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
+    current_flag = models.BooleanField(default=True)
 
 class Department(models.Model):
     name = models.CharField(max_length=50)
@@ -70,6 +74,7 @@ class Course(models.Model):
         return self.ID
 
 class Assessment(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.PROTECT)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -85,9 +90,8 @@ class SemesterLU(models.Model):
     year = models.CharField(max_length=4, default=datetime.datetime.now().year)
     semester = models.CharField(max_length=1, choices=SEASON_CHOICES)
 
-
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
-post_save.connect(create_user_profile, sender=User)
+#post_save.connect(create_user_profile, sender=User)
