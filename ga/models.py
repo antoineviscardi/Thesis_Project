@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
-from django.db.models.signals import post_save
+from django.db.models.signals import m2m_changed
 import datetime
 
 AYEAR_CHOICES = (('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'))
@@ -27,18 +27,6 @@ class Indicator(models.Model):
     current_flag = models.BooleanField(default=True)
     def __str__(self):
         return self.ID
-
-'''
-class Indicator_Course(models.Model):
-    indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
-    course = models.ForeignKey('Course', on_delete=models.CASCADE)
-    introduced = models.BooleanField(default=False)
-    taught = models.BooleanField(default=False)
-    used = models.BooleanField(default=False)
-    assessmentMethod = models.OneToOneField('AssessmentMethod', 
-                                            on_delete=models.PROTECT,
-                                            null=True)
- '''
     
 class AssessmentMethod(models.Model):
     indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
@@ -78,11 +66,11 @@ class Assessment(models.Model):
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT)
-    numOf4 = models.PositiveSmallIntegerField(blank=True, null=True)
-    numOf3 = models.PositiveSmallIntegerField(blank=True, null=True)
-    numOf2 = models.PositiveSmallIntegerField(blank=True, null=True)
-    numOf1 = models.PositiveSmallIntegerField(blank=True, null=True)
-    semester = models.OneToOneField('SemesterLU', on_delete=models.PROTECT)
+    numOf4 = models.PositiveSmallIntegerField('4', blank=True, null=True)
+    numOf3 = models.PositiveSmallIntegerField('3', blank=True, null=True)
+    numOf2 = models.PositiveSmallIntegerField('2', blank=True, null=True)
+    numOf1 = models.PositiveSmallIntegerField('1', blank=True, null=True)
+    semester = models.ForeignKey('SemesterLU', on_delete=models.PROTECT)
     def get_absolute_url(self):
         return reverse('assessments-view')
         
@@ -97,4 +85,35 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
-#post_save.connect(create_user_profile, sender=User)
+def courseTeacherChange(sender, **kwargs):
+    pk_set = kwargs['pk_set']
+    course = kwargs['instance']
+    currentSemester = SemesterLU.objects.latest()
+    if kwargs['action'] == 'post_add' :
+        for pk in pk_set:
+            teacher = Profile.objects.get(pk=pk)
+            for am in course.assessmentmethod_set.all():
+                for dept in course.department.all():
+                    Assessment.objects.get_or_create(
+                        department=dept,
+                        assessmentMethod=am,
+                        teacher=teacher.user,
+                        semester=currentSemester
+                    )
+                    
+    
+    elif kwargs['action'] == 'pre_remove' :
+        for pk in pk_set:
+            teacher = Profile.objects.get(pk=pk)
+            for am in course.assessmentmethod_set.all():
+                assessments = Assessment.objects.all().filter(
+                    teacher = teacher.user,
+                    assessmentMethod = am,
+                    semester = currentSemester
+                )
+                for assessment in assessments:
+                    assessment.delete()
+    
+m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
+
+    

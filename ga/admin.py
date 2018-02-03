@@ -13,6 +13,10 @@ admin.site.unregister(User)
 class UserProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
+    filter_horizontal  = ('department',)
+
+class ProfileCourseInline(admin.StackedInline):
+    model = Course.teachers.through
     
 class UserProfileAdmin(UserAdmin):
     inlines = (UserProfileInline,)
@@ -22,51 +26,12 @@ class UserProfileAdmin(UserAdmin):
         }),
         ('Personal info', {
             'fields': ('first_name', 'last_name', 'email')
-        }),
+        })
     )
 
 class CourseAdmin(admin.ModelAdmin):
     filter_horizontal = ('teachers','department')
-    exclude = ('current_flag',)
-    
-    def save_model(self, request, obj, form, change):
-        teachers = obj.teachers.all()
-        currentSemester = SemesterLU.objects.latest()
-        depts = obj.department.all()
-        ams = obj.assessmentmethod_set.all()
-        
-        ''' Create assessment for teacher assigned to the course
-        '''
-        
-        for teacher in teachers:
-            for am in ams:
-                for dept in depts:
-                    Assessment.objects.get_or_create(
-                        department=dept,
-                        assessmentMethod=am,
-                        teacher=teacher.user,
-                        semester=currentSemester
-                    )
-                    
-
-        ''' If a teacher is unasigned, delete the assessments
-        only if they are empty
-        '''
-        if 'teachers' in form.changed_data:
-            for am in ams :
-                assessments = Assessment.objects.filter(
-                    semester=currentSemester,
-                    assessmentMethod=am
-                    )
-                for assessment in assessments :
-                    if teacher not in teachers :
-                        if (assessment.numOf4 or assessment.numOf3 
-                            or assessment.numOf2 or assessment.numOf1) :
-                            assessment.delete() 
- 
-        super().save_model(request, obj, form, change) 
-                
-                                                              
+    exclude = ('current_flag',)               
 
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
@@ -81,6 +46,11 @@ class IndicatorAdmin(admin.ModelAdmin):
     
 class AttributeAdmin(admin.ModelAdmin):
     exclude = ('current_flag',)
+    
+class AssessmentAdmin(admin.ModelAdmin):
+    fields = ('teacher', 'department', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
+    #exclude = ('semester','assessmentMethod')
+    readonly_fields=('department', 'teacher')
 
   
 admin.site.register(User, UserProfileAdmin)
@@ -88,4 +58,4 @@ admin.site.register(Department)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Attribute, AttributeAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(Assessment)
+admin.site.register(Assessment, AssessmentAdmin)
