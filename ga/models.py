@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import m2m_changed, pre_save
 import datetime
 
 AYEAR_CHOICES = (('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'))
@@ -58,6 +58,7 @@ class Course(models.Model):
     department = models.ManyToManyField(Department)
     teachers = models.ManyToManyField(Profile, blank=True)
     current_flag = models.BooleanField(default=True)
+    
     def __str__(self):
         return self.ID
 
@@ -113,7 +114,44 @@ def courseTeacherChange(sender, **kwargs):
                 )
                 for assessment in assessments:
                     assessment.delete()
+
+
+def courseDepartmentChange(sender, **kwargs):
+    pk_set = kwargs['pk_set']
+    course = kwargs['instance']
+    currentSemester = SemesterLU.objects.latest() 
+    teachers = course.teachers.all()
+    ams = course.assessmentmethod_set.all()
+    
+    if kwargs['action'] == 'post_add':
+        depts = [Department.objects.get(pk = pk) for pk in pk_set]
+
+        for teacher in teachers:
+            for am in ams:
+                for dept in depts:
+                    a = Assessment(
+                        department = dept,
+                        assessmentMethod = am,
+                        teacher = teacher.user,
+                        semester = currentSemester
+                    )
+                    a.save()
+    
+    if kwargs['action'] == 'pre_remove':
+        depts = [Department.objects.get(pk=pk) for pk in pk_set]
+        for am in ams:
+            for dept in depts:
+                assessments = Assessment.objects.all().filter(
+                    assessmentMethod = am,
+                    semester = currentSemester,
+                    department = dept
+                )
+                for assessment in assessments:
+                    assessment.delete()
+            
     
 m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
+m2m_changed.connect(courseDepartmentChange, sender=Course.department.through)
+
 
     

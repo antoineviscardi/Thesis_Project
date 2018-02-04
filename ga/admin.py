@@ -31,8 +31,8 @@ class UserProfileAdmin(UserAdmin):
 
 class CourseAdmin(admin.ModelAdmin):
     filter_horizontal = ('teachers','department')
-    exclude = ('current_flag',)               
-
+    exclude = ('current_flag',)
+                
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
     exclude = ('current_flag',)
