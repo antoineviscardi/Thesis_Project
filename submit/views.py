@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from ga.models import Assessment, Course
+from ga.models import Assessment, Course, SemesterLU
 from ga.forms import AssessmentForm
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
@@ -22,10 +22,19 @@ class CourseListView(ListView):
 
 class CourseDetailView(DetailView):
     model = Course
+    c_semester = SemesterLU.objects.latest()
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        assessments = (self.request.user.assessment_set.all()
-                       .filter(course = self.object))
+        assessments = self.request.user.assessment_set.all().filter(
+            course = self.object,
+            semester = c_semester,
+            #FIX THIS! 
+            '''
+             |~~~~~~~~~|
+            <!- P4R7Y -!>
+             |~~~~~~~~~|
+            '''
+            )
         
         
         # create list of forms for every assessment
