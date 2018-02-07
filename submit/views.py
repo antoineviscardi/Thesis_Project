@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from ga.models import Assessment, Course, SemesterLU
+from ga.models import Assessment, Course, SemesterLU, AssessmentMethod
 from ga.forms import AssessmentForm
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
@@ -21,32 +21,33 @@ class CourseListView(ListView):
         
 
 class CourseDetailView(DetailView):
+    
     model = Course
-    c_semester = SemesterLU.objects.latest()
+   
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        assessments = self.request.user.assessment_set.all().filter(
-            course = self.object,
-            semester = c_semester,
-            #FIX THIS! 
-            '''
-             |~~~~~~~~~|
-            <!- P4R7Y -!>
-             |~~~~~~~~~|
-            '''
-            )
         
+        ams = AssessmentMethod.objects.all().filter(
+            course=self.object
+        )
         
-        # create list of forms for every assessment
-        forms = []
-        assessmentMethods = []
-        assessmentsPk = []
-        for assessment in assessments :
-            forms.append(AssessmentForm(instance=assessment))
-            assessmentMethods.append(assessment.assessmentMethod)
-            assessmentsPk.append(assessment.pk)
-            
-        context['list'] = zip(assessmentMethods, forms, assessmentsPk)
+        assessments = [
+            am.assessment_set.all().filter(
+                teacher=self.request.user,
+                semester=SemesterLU.objects.latest()
+            ) for am in ams
+        ]
+        
+        apks = [[a.pk for a in _a] for _a in assessments]
+        forms = [[AssessmentForm(instance=a) for a in _a] for _a in assessments]
+        
+        forms_apks_zip = [zip(f,a) for f,a in zip(forms, apks)]
+        
+        #forms = zip(forms, assessments_pk)
+        
+        #forms = [zip(f,a) for f,a in forms]
+        
+        context['list'] = zip(ams, forms_apks_zip)
         
         return context 
     
