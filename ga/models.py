@@ -42,20 +42,20 @@ class AssessmentMethod(models.Model):
                                      choices=SEASON_CHOICES)
     current_flag = models.BooleanField(default=True)
 
-class Department(models.Model):
+class Program(models.Model):
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
 
 class Profile(models.Model):
-    department = models.ManyToManyField('Department', blank=True)
+    program = models.ManyToManyField('Program', blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
-    department = models.ManyToManyField(Department)
+    programs = models.ManyToManyField(Program)
     teachers = models.ManyToManyField(Profile, blank=True)
     current_flag = models.BooleanField(default=True)
     
@@ -63,7 +63,7 @@ class Course(models.Model):
         return self.ID
 
 class Assessment(models.Model):
-    department = models.ForeignKey(Department, on_delete=models.PROTECT)
+    program = models.ForeignKey(Program, on_delete=models.PROTECT)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -77,9 +77,10 @@ class Assessment(models.Model):
         
 class SemesterLU(models.Model):
     year = models.CharField(max_length=4, default=datetime.datetime.now().year)
-    semester = models.CharField(max_length=1, choices=SEASON_CHOICES)
+    term = models.CharField(max_length=1, choices=SEASON_CHOICES)
     class Meta:
-        get_latest_by = ['year', 'semester']
+        get_latest_by = ['year', '-term']
+        unique_together = (('year', 'term'),)
     
     
 def create_user_profile(sender, instance, created, **kwargs):
@@ -94,9 +95,9 @@ def courseTeacherChange(sender, **kwargs):
         for pk in pk_set:
             teacher = Profile.objects.get(pk=pk)
             for am in course.assessmentmethod_set.all():
-                for dept in course.department.all():
+                for program in course.programs.all():
                     Assessment.objects.get_or_create(
-                        department=dept,
+                        program=program,
                         assessmentMethod=am,
                         teacher=teacher.user,
                         semester=currentSemester
@@ -124,18 +125,17 @@ def courseDepartmentChange(sender, **kwargs):
     ams = course.assessmentmethod_set.all()
     
     if kwargs['action'] == 'post_add':
-        depts = [Department.objects.get(pk = pk) for pk in pk_set]
+        programs = [Department.objects.get(pk = pk) for pk in pk_set]
 
         for teacher in teachers:
             for am in ams:
-                for dept in depts:
-                    a = Assessment(
-                        department = dept,
+                for program in programss:
+                    Assessment.objects.get_or_create(
+                        program = program,
                         assessmentMethod = am,
                         teacher = teacher.user,
                         semester = currentSemester
                     )
-                    a.save()
     
     if kwargs['action'] == 'pre_remove':
         depts = [Department.objects.get(pk=pk) for pk in pk_set]
@@ -151,7 +151,7 @@ def courseDepartmentChange(sender, **kwargs):
             
     
 m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
-m2m_changed.connect(courseDepartmentChange, sender=Course.department.through)
+m2m_changed.connect(courseDepartmentChange, sender=Course.programs.through)
 
 
     

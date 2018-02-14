@@ -1,7 +1,9 @@
-from ga.models import Assessment, Indicator, Course
+from ga.models import Assessment, Indicator, Course, SemesterLU
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
+from ga.models import SEASON_CHOICES, Course, Profile
+import datetime
 
 class AssessmentForm(forms.ModelForm):
     class Meta:
@@ -27,19 +29,29 @@ class IndicatorCourseAdminForm(forms.ModelForm):
             is_stacked=False
         )
     )
-    '''
-    def __inti__(self, *args, **kwargs):
-        super(IndicatorCourseAdminForm, self).__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.fields['course'].initial = self.instance.course_set.all()
-    '''
-    '''
-    def save(self, commit=True):
-        indicator = super(IndicatorAdminForm, self).save(commit=False)
-        if commit:
-            indicator.save()
-        if indicator.pk:
-            indicator.introduced_set = self.cleaned_data['userprofiles']
-            self.save_m2m()
-        return indicator
-    '''
+    
+class NewSemesterForm(forms.Form):
+    
+    def __init__(self, *args, **kwargs):
+        super(NewSemesterForm, self).__init__(*args, **kwargs)
+        
+        cYear = datetime.datetime.now().year
+        cTerm = SemesterLU.objects.latest().term
+        iTerm = "A" if cTerm=="W" else "W"
+        yearChoices = [(y,y) for y in range(cYear-5, cYear+3)]
+        
+        self.fields['year'] = forms.ChoiceField(
+            choices=yearChoices, initial=cYear)
+        self.fields['term'] = forms.ChoiceField(
+            choices=SEASON_CHOICES, initial=iTerm)
+        
+        courses = Course.objects.all()
+        teachers = Profile.objects.all()
+        teachersID = [t.user.id for t in teachers]
+        
+        for course in courses:
+            self.fields['{}'.format(course)] = forms.MultipleChoiceField(
+                choices=zip(teachersID, teachers), required=False)
+            self.fields['{}'.format(course)].label = '{}'.format(course)
+        
+    

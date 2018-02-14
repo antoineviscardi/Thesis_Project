@@ -1,19 +1,34 @@
 from django.contrib import admin
+from django.contrib.admin import AdminSite
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from django.urls import path
+from .views import NewSemesterView
 from .forms import IndicatorCourseAdminForm
-from .models import (Profile, Department, Course, Attribute, 
+from .models import (Profile, Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
 
+class MyAdminSite(AdminSite):
+    
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('new_semester/', self.admin_view(NewSemesterView.as_view())),
+        ]
+        return my_urls + urls
+
+admin_site = MyAdminSite(name='myadmin')
+
+
 # Register your models here.
 
-admin.site.unregister(User)
+#admin_site.unregister(User)
 
 class UserProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
-    filter_horizontal  = ('department',)
+    filter_horizontal  = ('program',)
 
 class ProfileCourseInline(admin.StackedInline):
     model = Course.teachers.through
@@ -30,7 +45,7 @@ class UserProfileAdmin(UserAdmin):
     )
 
 class CourseAdmin(admin.ModelAdmin):
-    filter_horizontal = ('teachers','department')
+    filter_horizontal = ('teachers','programs')
     exclude = ('current_flag',)
                 
 class AssessmentMethodInline(admin.StackedInline):
@@ -48,14 +63,13 @@ class AttributeAdmin(admin.ModelAdmin):
     exclude = ('current_flag',)
     
 class AssessmentAdmin(admin.ModelAdmin):
-    fields = ('teacher', 'department', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
-    #exclude = ('semester','assessmentMethod')
-    readonly_fields=('department', 'teacher')
+    fields = ('teacher', 'program', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
+    readonly_fields=('program', 'teacher')
 
   
-admin.site.register(User, UserProfileAdmin)
-admin.site.register(Department)
-admin.site.register(Course, CourseAdmin)
-admin.site.register(Attribute, AttributeAdmin)
-admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(Assessment, AssessmentAdmin)
+admin_site.register(User, UserProfileAdmin)
+admin_site.register(Program)
+admin_site.register(Course, CourseAdmin)
+admin_site.register(Attribute, AttributeAdmin)
+admin_site.register(Indicator, IndicatorAdmin)
+admin_site.register(Assessment, AssessmentAdmin)
