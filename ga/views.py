@@ -1,7 +1,7 @@
 from django.views.generic.edit import FormView
 from ga.models import Course, SemesterLU
 from .forms import NewSemesterForm, EmailsForm
-from .models import SemesterLU, Course, Assessment
+from .models import SemesterLU, Course, Assessment, Profile
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -42,5 +42,28 @@ class EmailsView(FormView):
     form_class = EmailsForm
     success_url = "/admin"
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context_all = Profile.objects.all()
+        context_all = [str(t.id) for t in context_all]
+        context['all'] = context_all
+        
+        context_unsubmited = []
+        for t in [p.user for p in Profile.objects.all()]:
+            for a in t.assessment_set.all():
+                if not(a.numOf4 and a.numOf3 and a.numOf2 and a.numOf1):
+                     context_unsubmited.append(str(t.profile.id))
+                     break
+        context['unsubmited'] = context_unsubmited
+        
+        context['assigned'] = [str(Profile.objects.get(user=t).id) 
+            for t in Assessment.objects.values_list(
+                'teacher', 
+                flat=True
+            ).distinct()
+        ]
+        
+        return context
     
     

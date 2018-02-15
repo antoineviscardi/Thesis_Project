@@ -72,8 +72,7 @@ class Assessment(models.Model):
     numOf2 = models.PositiveSmallIntegerField('2', blank=True, null=True)
     numOf1 = models.PositiveSmallIntegerField('1', blank=True, null=True)
     semester = models.ForeignKey('SemesterLU', on_delete=models.PROTECT)
-    def get_absolute_url(self):
-        return reverse('assessments-view')
+    
         
 class SemesterLU(models.Model):
     year = models.CharField(max_length=4, default=datetime.datetime.now().year)

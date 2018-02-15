@@ -2,6 +2,37 @@
 
 {% block content %}
 
+
+<script>
+function updateList(o) {
+    var list = document.getElementById("id_recipiants_list");
+    var len = list.options.length;
+    var values;
+    switch(o.options[o.selectedIndex].value) {
+        case 'all':
+            values = {{all|safe}};
+            break;
+        case 'unsubmited':
+            values = {{unsubmited|safe}};
+            break;
+        case 'assigned':
+            values = {{assigned|safe}};
+            break;
+    }
+    
+    list.value = [];
+    
+    if(!values){return;}
+    
+    for (var i = 0; i < len; i++) {
+        if (values.indexOf(list[i].value) >= 0) {
+            list[i].selected = true;
+        }
+    }
+}
+</script>
+
+
 <h1>Send automated emails</h1>
 <p>
 </p>
