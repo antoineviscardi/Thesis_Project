@@ -1,6 +1,6 @@
 from django.views.generic.edit import FormView
 from ga.models import Course, SemesterLU
-from .forms import NewSemesterForm
+from .forms import NewSemesterForm, EmailsForm
 from .models import SemesterLU, Course, Assessment
 from django.contrib.auth.models import User
 
@@ -37,16 +37,10 @@ class NewSemesterView(FormView):
         
         return super().form_valid(form)
     
-    '''
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['new_term'] = 'W' #SemesterLU.objects.latest().term
-        context['new_year'] = '2018' #int(SemesterLU.objects.latest().year) + 1
-        return context
-        
-    def get(self, request, *args, **kwargs):
-        return super().get(request)
-        
-    def post(self, request, *args, **kwargs):
-        a = 42
-    '''
+class EmailsView(FormView):
+    template_name = 'emails.html'
+    form_class = EmailsForm
+    success_url = "/admin"
+    
+    
+    

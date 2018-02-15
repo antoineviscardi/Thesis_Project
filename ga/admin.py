@@ -3,7 +3,7 @@ from django.contrib.admin import AdminSite
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from django.urls import path
-from .views import NewSemesterView
+from .views import NewSemesterView, EmailsView
 from .forms import IndicatorCourseAdminForm
 from .models import (Profile, Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
@@ -15,6 +15,7 @@ class MyAdminSite(AdminSite):
         urls = super().get_urls()
         my_urls = [
             path('new_semester/', self.admin_view(NewSemesterView.as_view())),
+            path('emails/', self.admin_view(EmailsView.as_view())),
         ]
         return my_urls + urls
 

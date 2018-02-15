@@ -54,4 +54,36 @@ class NewSemesterForm(forms.Form):
                 choices=zip(teachersID, teachers), required=False)
             self.fields['{}'.format(course)].label = '{}'.format(course)
         
+    def clean(self):
+        cleaned_data = super().clean()
+        year = cleaned_data['year']
+        term = cleaned_data['term']
+        if SemesterLU.objects.filter(year=year, term=term).exists():
+            raise forms.ValidationError(
+                "This semester already exists."
+            )
+   
+
+
+class EmailsForm(forms.Form):
+    recipiants_options = (("",""),
+        ("all", "all teachers"),
+        ("unsubmited", "teachers with unsubmitted assessments"),
+        ("assigned", "teachers assigned to classes with assessments"),
+    )
     
+    recipiants_options = forms.ChoiceField(
+        choices=recipiants_options, required=False,
+        label="Recipiants"
+    )
+    
+    recipiants = forms.ModelMultipleChoiceField(
+        queryset=Profile.objects.all(),
+        label=""
+    )
+    
+    message = forms.CharField(
+        widget=forms.widgets.Textarea, 
+        max_length=2000
+    )
+        
