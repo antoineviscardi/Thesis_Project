@@ -2,11 +2,13 @@
 
 {% block content %}
 
-<h1>Start new semester!</h1>
-
+<h1>Start new semester</h1>
+<p>Here you can assign teachers to each class. Teachers can always be added or removed later on.
+</p>
+<hr>
 <form action="" method="post">
     {% csrf_token %}
-    {{form.as_p}}
+    <p>{{form.as_p}}</p>
     <input type="submit" value="Confirm"/>
 </form>
 
