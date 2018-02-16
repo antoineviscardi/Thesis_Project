@@ -3,6 +3,7 @@ from ga.models import Course, SemesterLU
 from .forms import NewSemesterForm, EmailsForm
 from .models import SemesterLU, Course, Assessment, Profile
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 
 # Create your views here.
 
@@ -66,4 +67,16 @@ class EmailsView(FormView):
         
         return context
     
-    
+    def form_valid(self, form):
+        
+        send_mail(
+            'object',
+            form.cleaned_data['message'],
+            'RMC.GAMS@gmail.com',
+            ['s26912@rmc.ca']
+        )
+        
+        return super().form_valid(form)
+        
+        
+        

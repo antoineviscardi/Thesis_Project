@@ -66,19 +66,19 @@ class NewSemesterForm(forms.Form):
 
 
 class EmailsForm(forms.Form):
-    recipiants_options = (('',''),
+    recipients_options = (('',''),
         ('assigned', 'teachers assigned to classes with assessments'),
         ('unsubmited', 'teachers with unsubmited assessments'),
         ('all', 'all teachers'),
     )
     
-    recipiants = forms.ChoiceField(
-        choices=recipiants_options, required=False,
-        help_text="You can choose a group and modify the recipiants in the list",
+    recipients = forms.ChoiceField(
+        choices=recipients_options, required=False,
+        help_text="You can choose a group and modify the recipients in the list",
         widget=forms.Select(attrs={'onchange': 'updateList(this)'})
     )
     
-    recipiants_list = forms.ModelMultipleChoiceField(
+    recipients_list = forms.ModelMultipleChoiceField(
         queryset=Profile.objects.all(),
         label=""
     )
