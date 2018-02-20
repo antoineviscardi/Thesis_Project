@@ -2,8 +2,10 @@ from django.views.generic.edit import FormView
 from ga.models import Course, SemesterLU
 from .forms import NewSemesterForm, EmailsForm
 from .models import SemesterLU, Course, Assessment, Profile
+from django.contrib import admin
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import send_mass_mail
+from gams.settings import EMAIL_HOST_USER
 
 # Create your views here.
 
@@ -69,12 +71,19 @@ class EmailsView(FormView):
     
     def form_valid(self, form):
         
-        send_mail(
-            'object',
-            form.cleaned_data['message'],
-            'RMC.GAMS@gmail.com',
-            ['s26912@rmc.ca']
-        )
+        object_line=form.cleaned_data['object_line']
+        message = form.cleaned_data['message']
+
+        emails = [(
+            object_line, 
+            message.replace(
+                '{{username}}',r.user.username
+            ),
+            EMAIL_HOST_USER,
+            (r.user.email,)
+        ) for r in form.cleaned_data['recipients_list']]   
+        
+        send_mass_mail(emails, fail_silently=False)
         
         return super().form_valid(form)
         
