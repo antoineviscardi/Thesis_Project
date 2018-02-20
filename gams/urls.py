@@ -16,11 +16,17 @@ Including another URLconf
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from ga.admin import admin_site
+from django.views.generic import RedirectView
  
 urlpatterns = [
-    path('', auth_views.login, name='login'),
-    path('accounts/login/', auth_views.login, name='login'),
-    path('logout/', auth_views.logout, name='logout'),
+    path('', include('django.contrib.auth.urls')),
+    path('', RedirectView.as_view(url='login/')),
+    path('login/', auth_views.login),
+    path('logout/', auth_views.logout),
+    path('password_reset/', auth_views.password_reset),
+    path('password_reset/done/', auth_views.password_reset_done),
+    path('reset/<uid64>/<token>/', auth_views.password_reset_confirm),
+    path('reset/done/', auth_views.password_reset_complete),
     path('admin/', admin_site.urls),
     path('submit/', include('submit.urls')),
 ]

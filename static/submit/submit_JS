@@ -1,8 +1,0 @@
-function submitUserName() {
-    var passwordDiv = document.getElementById("passwordDiv");
-    if (passwordDiv.style.display == "none") {
-        passwordDiv.style.display = "block";
-    } else {
-        passwordDiv.style.display = "none";
-    }
-}
