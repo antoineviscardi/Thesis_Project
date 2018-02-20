@@ -1,12 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login{% endblock %}
 
+
 {% block content %}
   <h2>Login</h2>
-  <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
+  <form method="post" action="{% url 'login' %}">{% csrf_token %}
+    <table>
+    
+        <div id="field_username">
+        <tr><td colspan="2">{{ form.username.errors }}</td></tr>
+        <tr><th>{{ form.username.label }}</th><td>{{ form.username }}</td>
+        </div>
+        
+        <div id="field_password">
+        <tr><td colspan="2">{{ form.password.errors }}</td></tr>
+        <tr><th>{{ form.password.label }}</th><td>{{ form.password }}</td>
+        </div>
+    
+    </table>
+    <button id="btn_login" type="submit">Login</button>
   </form>
 {% endblock %}
