@@ -1,13 +1,18 @@
 {% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
+{% endblock %}
 
 {% block content %}
 
-
 <script>
 function updateList(o) {
-    var list = document.getElementById("id_recipiants_list");
+    var list = document.getElementById("id_recipients_list");
     var len = list.options.length;
-    var values;
+    var values = null;
     switch(o.options[o.selectedIndex].value) {
         case 'all':
             values = {{all|safe}};
@@ -33,18 +38,15 @@ function updateList(o) {
 </script>
 
 
-<h1>Send automated emails</h1>
-<p>
-</p>
+<p>Send automated emails</p>
+
 <hr>
 
-<form action="" method="post">
-    {% csrf_token %}
+<form action="" method="post">{% csrf_token %}
     <table>
     {{form.as_table}}
     </table>
     <input type="submit" value="Send"/>
 </form>
-
 
 {% endblock %}
