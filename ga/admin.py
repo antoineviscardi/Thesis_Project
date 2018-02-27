@@ -7,7 +7,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.urls import path
 from django import forms
 from .views import NewSemesterView, EmailsView
-from .forms import IndicatorCourseAdminForm
 from .models import (Profile, Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -72,12 +71,13 @@ UserProfileAdmin.add_fieldsets = (
 admin.site.unregister(User)
 
 class CourseAdmin(admin.ModelAdmin):
-    filter_horizontal = ('teachers','programs')
+    filter_horizontal = ('teachers',)
     exclude = ('current_flag',)
                 
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
     exclude = ('current_flag',)
+    filter_horizontal = ('programs',)
     can_delete = False
     extra = 1
 
@@ -88,11 +88,37 @@ class IndicatorAdmin(admin.ModelAdmin):
     
 class AttributeAdmin(admin.ModelAdmin):
     exclude = ('current_flag',)
+    ordering = ('name',)
     
 class AssessmentAdmin(admin.ModelAdmin):
     fields = ('teacher', 'program', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
     readonly_fields=('program', 'teacher')
-
+    
+    list_display=('pk', 'indicator', 'course', 'program', 'profile', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
+  
+    def profile(self, obj):
+        return obj.teacher.profile
+    profile.short_description = 'Teacher'
+    profile.admin_order_field = 'teacher__profile'
+    
+    def course(self, obj):
+        return obj.assessmentMethod.course
+    course.admin_order_field = 'assessmentMethod__course'
+       
+    def indicator(self, obj):
+        return obj.assessmentMethod.indicator
+    indicator.admin_order_field = 'assessmentMethod__indicator'
+    
+    def get_actions(self, request):
+        actions = super(AssessmentAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def has_add_permission(self, request, obj=None):
+        return False
   
 admin_site.register(User, UserProfileAdmin)
 admin_site.register(Program)

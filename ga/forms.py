@@ -15,7 +15,8 @@ class AssessmentForm(forms.ModelForm):
             'numOf2': _('Needs Improvement - 2'),
             'numOf1': _('Unacceptable - 1'),
         }
-        
+
+'''        
 class IndicatorCourseAdminForm(forms.ModelForm):
     class Meta:
         model = Indicator
@@ -29,6 +30,7 @@ class IndicatorCourseAdminForm(forms.ModelForm):
             is_stacked=False
         )
     )
+'''
     
 class NewSemesterForm(forms.Form):
     
