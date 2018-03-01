@@ -18,17 +18,17 @@ class NewSemesterView(FormView):
     def form_valid(self, form):
         year = form.cleaned_data['year']
         term = form.cleaned_data['term']
-        courses = Course.objects.all()
+        courses = Course.objects.all().filter(current_flag=True)
         
         cSemester = SemesterLU.objects.get_or_create(year=year, term=term)
         
         for course in courses:
             teachers = form.cleaned_data['{}'.format(course)]
             teachers = [User.objects.get(id=t) for t in teachers]
-            programs = course.programs.all()
             ams = course.assessmentmethod_set.all()
             for teacher in teachers:
                 for am in ams:
+                    programs = am.programs.all()
                     for program in programs:
                         Assessment.objects.get_or_create(
                             program=program,
@@ -55,7 +55,7 @@ class EmailsView(FormView):
         context_unsubmited = []
         for t in [p.user for p in Profile.objects.all()]:
             for a in t.assessment_set.all():
-                if not(a.numOf4 and a.numOf3 and a.numOf2 and a.numOf1):
+                if (a.numOf4 is None or a.numOf3 is None or a.numOf2 is None or a.numOf1 is None):
                      context_unsubmited.append(str(t.profile.id))
                      break
         context['unsubmited'] = context_unsubmited
