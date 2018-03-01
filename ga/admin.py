@@ -119,6 +119,10 @@ class AssessmentAdmin(admin.ModelAdmin):
     
     def has_add_permission(self, request, obj=None):
         return False
+        
+    def get_queryset(self, request):
+        qs = super(AssessmentAdmin, self).get_queryset(request)
+        return qs.filter(semester=SemesterLU.objects.latest())
   
 admin_site.register(User, UserProfileAdmin)
 admin_site.register(Program)

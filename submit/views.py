@@ -43,10 +43,6 @@ class CourseDetailView(DetailView):
         
         forms_apks_zip = [zip(f,a) for f,a in zip(forms, apks)]
         
-        #forms = zip(forms, assessments_pk)
-        
-        #forms = [zip(f,a) for f,a in forms]
-        
         context['list'] = zip(ams, forms_apks_zip)
         
         return context 
