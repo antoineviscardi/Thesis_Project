@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'ga.apps.GaConfig',
+    'automated_email.apps.AutomatedEmailConfig',
     'submit.apps.SubmitConfig',
     'django.contrib.admin',
     'django.contrib.auth',

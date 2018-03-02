@@ -1,17 +1,16 @@
 from django.views.generic.edit import FormView
 from ga.models import Course, SemesterLU
-from .forms import NewSemesterForm, EmailsForm
+from .forms import NewSemesterForm
+from automated_email.forms import EmailsForm
 from .models import SemesterLU, Course, Assessment, Profile
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.mail import send_mass_mail
 from gams.settings import EMAIL_HOST_USER
 
-# Create your views here.
-
 # New Semester Views
 class NewSemesterView(FormView):
-    template_name = 'new_semester.html'
+    template_name = 'ga/new_semester.html'
     form_class = NewSemesterForm
     success_url = "/admin"
     
@@ -39,35 +38,6 @@ class NewSemesterView(FormView):
                 
         
         return super().form_valid(form)
-    
-class EmailsView(FormView):
-    template_name = 'emails.html'
-    form_class = EmailsForm
-    success_url = "/admin"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        context_all = Profile.objects.all()
-        context_all = [str(t.id) for t in context_all]
-        context['all'] = context_all
-        
-        context_unsubmited = []
-        for t in [p.user for p in Profile.objects.all()]:
-            for a in t.assessment_set.all():
-                if (a.numOf4 is None or a.numOf3 is None or a.numOf2 is None or a.numOf1 is None):
-                     context_unsubmited.append(str(t.profile.id))
-                     break
-        context['unsubmited'] = context_unsubmited
-        
-        context['assigned'] = [str(Profile.objects.get(user=t).id) 
-            for t in Assessment.objects.values_list(
-                'teacher', 
-                flat=True
-            ).distinct()
-        ]
-        
-        return context
     
     def form_valid(self, form):
         

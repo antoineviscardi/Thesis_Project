@@ -6,7 +6,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import path
 from django import forms
-from .views import NewSemesterView, EmailsView
+from automated_email.views import EmailsView
+from .views import NewSemesterView
 from .models import (Profile, Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -20,8 +21,6 @@ class MyAdminSite(AdminSite):
             path('emails/', self.admin_view(EmailsView.as_view())),
         ]
         return my_urls + urls
-
-admin_site = MyAdminSite(name='myadmin')
 
 class MyUserCreationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
@@ -123,7 +122,8 @@ class AssessmentAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(AssessmentAdmin, self).get_queryset(request)
         return qs.filter(semester=SemesterLU.objects.latest())
-  
+ 
+admin_site = MyAdminSite(name='myadmin') 
 admin_site.register(User, UserProfileAdmin)
 admin_site.register(Program)
 admin_site.register(Course, CourseAdmin)
