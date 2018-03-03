@@ -5,8 +5,10 @@ from django.urls import reverse
 from django.db.models.signals import m2m_changed, pre_save
 import datetime
 
+
 AYEAR_CHOICES = (('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'))
 SEASON_CHOICES = (('W', 'Winter'), ('A', 'Autumn'))
+
 
 class Attribute(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
@@ -16,6 +18,7 @@ class Attribute(models.Model):
     
     def __str__(self):
         return self.ID + ' ' + self.name
+
 
 class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
@@ -28,6 +31,7 @@ class Indicator(models.Model):
     current_flag = models.BooleanField(default=True)
     def __str__(self):
         return self.ID
+  
     
 class AssessmentMethod(models.Model):
     indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
@@ -43,6 +47,7 @@ class AssessmentMethod(models.Model):
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
     current_flag = models.BooleanField(default=True)
+
 
 class Program(models.Model):
     name = models.CharField(max_length=50)
@@ -61,17 +66,10 @@ class Program(models.Model):
             self.current_flag = False
             self.save()
 
-class Profile(models.Model):
-    program = models.ManyToManyField('Program', blank=True)
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
-    
-    def __str__(self):
-        return self.user.first_name + ' ' + self.user.last_name
-
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
-    teachers = models.ManyToManyField(Profile, blank=True)
+    teachers = models.ManyToManyField(User, blank=True)
     current_flag = models.BooleanField(default=True)
     
     def __str__(self):
@@ -100,10 +98,6 @@ class SemesterLU(models.Model):
         get_latest_by = ['year', '-term']
         unique_together = (('year', 'term'),)
     
-    
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
 
 def courseTeacherChange(sender, **kwargs):
     pk_set = kwargs['pk_set']
@@ -112,23 +106,23 @@ def courseTeacherChange(sender, **kwargs):
     print(currentSemester)
     if kwargs['action'] == 'post_add' :
         for pk in pk_set:
-            teacher = Profile.objects.get(pk=pk)
+            teacher = User.objects.get(pk=pk)
             for am in course.assessmentmethod_set.all():
                 for program in am.programs.all():
                     Assessment.objects.get_or_create(
                         program=program,
                         assessmentMethod=am,
-                        teacher=teacher.user,
+                        teacher=teacher,
                         semester=currentSemester
                     )
                     
     
     elif kwargs['action'] == 'pre_remove' :
         for pk in pk_set:
-            teacher = Profile.objects.get(pk=pk)
+            teacher = User.objects.get(pk=pk)
             for am in course.assessmentmethod_set.all():
                 assessments = Assessment.objects.all().filter(
-                    teacher = teacher.user,
+                    teacher = teacher,
                     assessmentMethod = am,
                     semester = currentSemester
                 )
@@ -151,7 +145,7 @@ def assessmentMethodProgramChange(sender, **kwargs):
                 Assessment.objects.get_or_create(
                     program = program,
                     assessmentMethod = am,
-                    teacher = teacher.user,
+                    teacher = teacher,
                     semester = currentSemester
                 )
     
@@ -169,6 +163,4 @@ def assessmentMethodProgramChange(sender, **kwargs):
     
 m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
 m2m_changed.connect(assessmentMethodProgramChange, sender=AssessmentMethod.programs.through)
-
-
-    
+ 

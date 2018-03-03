@@ -3,5 +3,3 @@ bin/
 include/
 
 **/__pycache__/**
-
-**/migrations

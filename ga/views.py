@@ -2,7 +2,7 @@ from django.views.generic.edit import FormView
 from ga.models import Course, SemesterLU
 from .forms import NewSemesterForm
 from automated_email.forms import EmailsForm
-from .models import SemesterLU, Course, Assessment, Profile
+from .models import SemesterLU, Course, Assessment
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.core.mail import send_mass_mail
@@ -26,7 +26,7 @@ class NewSemesterView(FormView):
             teachers = [User.objects.get(id=t) for t in teachers]
             course.teachers.clear()
             for t in teachers:
-                course.teachers.add(t.profile)
+                course.teachers.add(t)
             course.save()
             ams = course.assessmentmethod_set.all()
             for teacher in teachers:

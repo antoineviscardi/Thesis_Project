@@ -1,5 +1,5 @@
 from django import forms
-from ga.models import Profile
+from django.contrib.auth.models import User
 
 class EmailsForm(forms.Form):
     recipients_options = (('',''),
@@ -15,7 +15,7 @@ class EmailsForm(forms.Form):
     )
     
     recipients_list = forms.ModelMultipleChoiceField(
-        queryset=Profile.objects.all(),
+        queryset=User.objects.all(),
         label="",
         help_text='Hold down "Control", or "Command" on a Mac, to select\
         more than one.'

@@ -2,8 +2,32 @@ from ga.models import Assessment, Indicator, Course, SemesterLU
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
-from ga.models import SEASON_CHOICES, Course, Profile
+from ga.models import SEASON_CHOICES, Course
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 import datetime
+
+
+class MyUserCreationForm(UserCreationForm):
+ 
+    def __init__(self, *args, **kwargs):
+        super(MyUserCreationForm, self).__init__(*args, **kwargs)
+        self.fields['password1'].required = False
+        self.fields['password2'].required = False
+        self.fields['password1'].widget.attrs['autocomplete'] = 'off'
+        self.fields['password2'].widget.attrs['autocomplete'] = 'off'
+        self.fields['email'] = forms.EmailField(
+            label="E-mail", 
+            max_length=75
+        )
+        
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = super(MyUserCreationForm, self).clean_password2()
+        if bool(password1) ^ bool(password2):
+            raise forms.ValidationError("Fill out both fields")
+        return password2
+
 
 class AssessmentForm(forms.ModelForm):
     class Meta:
@@ -33,8 +57,8 @@ class NewSemesterForm(forms.Form):
             choices=SEASON_CHOICES, initial=iTerm)
         
         courses = Course.objects.all().filter(current_flag=True)
-        teachers = Profile.objects.all()
-        teachersID = [t.user.id for t in teachers]
+        teachers = User.objects.all()
+        teachersID = [t.id for t in teachers]
         
         for course in courses:
             self.fields['{}'.format(course)] = forms.MultipleChoiceField(
