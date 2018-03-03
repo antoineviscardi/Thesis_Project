@@ -13,6 +13,7 @@ class Attribute(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=1000, blank=True)
     current_flag = models.BooleanField(default=True)
+    
     def __str__(self):
         return self.ID + ' ' + self.name
 
@@ -45,14 +46,28 @@ class AssessmentMethod(models.Model):
 
 class Program(models.Model):
     name = models.CharField(max_length=50)
+    current_flag= models.BooleanField(default=True)
+    
     def __str__(self):
         return self.name
+        
+    def delete(self):
+        if self.assessment_set.all().count() == 0:
+            super(Program, self).delete()
+        else:
+            assessments = self.assessment_set.all().filter(semester=SemesterLU.objects.latest())
+            for assessment in assessments:
+                assessment.delete()
+            self.current_flag = False
+            self.save()
 
 class Profile(models.Model):
     program = models.ManyToManyField('Program', blank=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
+    
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name
+
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
@@ -61,8 +76,7 @@ class Course(models.Model):
     
     def __str__(self):
         return self.ID
-        
-        
+                
 
 class Assessment(models.Model):
     program = models.ForeignKey(Program, on_delete=models.PROTECT)
@@ -95,11 +109,12 @@ def courseTeacherChange(sender, **kwargs):
     pk_set = kwargs['pk_set']
     course = kwargs['instance']
     currentSemester = SemesterLU.objects.latest()
+    print(currentSemester)
     if kwargs['action'] == 'post_add' :
         for pk in pk_set:
             teacher = Profile.objects.get(pk=pk)
             for am in course.assessmentmethod_set.all():
-                for program in course.programs.all():
+                for program in am.programs.all():
                     Assessment.objects.get_or_create(
                         program=program,
                         assessmentMethod=am,
@@ -125,6 +140,7 @@ def assessmentMethodProgramChange(sender, **kwargs):
     pk_set = kwargs['pk_set']
     am = kwargs['instance']
     currentSemester = SemesterLU.objects.latest() 
+    print(currentSemester)
     teachers = am.course.teachers.all()
     
     if kwargs['action'] == 'post_add':

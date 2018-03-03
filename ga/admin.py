@@ -89,6 +89,14 @@ class AttributeAdmin(admin.ModelAdmin):
     exclude = ('current_flag',)
     ordering = ('name',)
     
+class ProgramAdmin(admin.ModelAdmin):
+    exclude = ('current_flag',)
+    
+    def get_queryset(self, request):
+        qs = super(ProgramAdmin, self).get_queryset(request)
+        return qs.filter(current_flag=True)
+    
+    
 class AssessmentAdmin(admin.ModelAdmin):
     fields = ('teacher', 'program', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
     readonly_fields=('program', 'teacher')
@@ -125,7 +133,7 @@ class AssessmentAdmin(admin.ModelAdmin):
  
 admin_site = MyAdminSite(name='myadmin') 
 admin_site.register(User, UserProfileAdmin)
-admin_site.register(Program)
+admin_site.register(Program, ProgramAdmin)
 admin_site.register(Course, CourseAdmin)
 admin_site.register(Attribute, AttributeAdmin)
 admin_site.register(Indicator, IndicatorAdmin)

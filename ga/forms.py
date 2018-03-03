@@ -16,21 +16,6 @@ class AssessmentForm(forms.ModelForm):
             'numOf1': _('Unacceptable - 1'),
         }
 
-'''        
-class IndicatorCourseAdminForm(forms.ModelForm):
-    class Meta:
-        model = Indicator
-        fields = ['course']
-     
-    course = forms.ModelMultipleChoiceField(
-        queryset=Course.objects.all(),
-        required=False,
-        widget=FilteredSelectMultiple(
-            verbose_name='Introduced in',
-            is_stacked=False
-        )
-    )
-'''
     
 class NewSemesterForm(forms.Form):
     

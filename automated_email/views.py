@@ -31,3 +31,24 @@ class EmailsView(FormView):
         ]
         
         return context
+        
+        
+    def form_valid(self, form):
+        
+        object_line=form.cleaned_data['object_line']
+        message = form.cleaned_data['message']
+
+        emails = [(
+            object_line, 
+            message.replace(
+                '{{username}}',r.user.username
+            ),
+            EMAIL_HOST_USER,
+            (r.user.email,)
+        ) for r in form.cleaned_data['recipients_list']]   
+        
+        send_mass_mail(emails, fail_silently=False)
+        
+        return super().form_valid(form)
+        
+        

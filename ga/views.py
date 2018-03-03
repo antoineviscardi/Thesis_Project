@@ -24,6 +24,10 @@ class NewSemesterView(FormView):
         for course in courses:
             teachers = form.cleaned_data['{}'.format(course)]
             teachers = [User.objects.get(id=t) for t in teachers]
+            course.teachers.clear()
+            for t in teachers:
+                course.teachers.add(t.profile)
+            course.save()
             ams = course.assessmentmethod_set.all()
             for teacher in teachers:
                 for am in ams:
@@ -36,24 +40,6 @@ class NewSemesterView(FormView):
                             semester=cSemester[0]
                         ) 
                 
-        
-        return super().form_valid(form)
-    
-    def form_valid(self, form):
-        
-        object_line=form.cleaned_data['object_line']
-        message = form.cleaned_data['message']
-
-        emails = [(
-            object_line, 
-            message.replace(
-                '{{username}}',r.user.username
-            ),
-            EMAIL_HOST_USER,
-            (r.user.email,)
-        ) for r in form.cleaned_data['recipients_list']]   
-        
-        send_mass_mail(emails, fail_silently=False)
         
         return super().form_valid(form)
         
