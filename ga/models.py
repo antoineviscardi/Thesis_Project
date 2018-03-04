@@ -14,7 +14,6 @@ class Attribute(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=1000, blank=True)
-    current_flag = models.BooleanField(default=True)
     
     def __str__(self):
         return self.ID + ' ' + self.name
@@ -28,7 +27,6 @@ class Indicator(models.Model):
     taught = models.ManyToManyField('Course', related_name='taught', blank=True)
     used = models.ManyToManyField('Course', related_name='used', blank=True)
     assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
-    current_flag = models.BooleanField(default=True)
     def __str__(self):
         return self.ID
   
@@ -46,31 +44,17 @@ class AssessmentMethod(models.Model):
                                  choices=AYEAR_CHOICES)
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
-    current_flag = models.BooleanField(default=True)
-
 
 class Program(models.Model):
     name = models.CharField(max_length=50)
-    current_flag= models.BooleanField(default=True)
     
     def __str__(self):
         return self.name
-        
-    def delete(self):
-        if self.assessment_set.all().count() == 0:
-            super(Program, self).delete()
-        else:
-            assessments = self.assessment_set.all().filter(semester=SemesterLU.objects.latest())
-            for assessment in assessments:
-                assessment.delete()
-            self.current_flag = False
-            self.save()
 
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
     teachers = models.ManyToManyField(User, blank=True)
-    current_flag = models.BooleanField(default=True)
     
     def __str__(self):
         return self.ID

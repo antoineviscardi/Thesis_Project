@@ -47,12 +47,10 @@ admin.site.unregister(User)
 
 class CourseAdmin(admin.ModelAdmin):
     filter_horizontal = ('teachers',)
-    exclude = ('current_flag',)
 
                 
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
-    exclude = ('current_flag',)
     filter_horizontal = ('programs',)
     can_delete = True
     extra = 1
@@ -60,22 +58,12 @@ class AssessmentMethodInline(admin.StackedInline):
 
 class IndicatorAdmin(admin.ModelAdmin):
     filter_horizontal = ('introduced', 'taught', 'used')
-    exclude = ('current_flag',)
     inlines = (AssessmentMethodInline,)
 
     
 class AttributeAdmin(admin.ModelAdmin):
-    exclude = ('current_flag',)
     ordering = ('name',)
- 
-    
-class ProgramAdmin(admin.ModelAdmin):
-    exclude = ('current_flag',)
-    
-    def get_queryset(self, request):
-        qs = super(ProgramAdmin, self).get_queryset(request)
-        return qs.filter(current_flag=True)
-    
+        
     
 class AssessmentAdmin(admin.ModelAdmin):
     fields = ('teacher', 'program', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
@@ -109,7 +97,7 @@ class AssessmentAdmin(admin.ModelAdmin):
  
 admin_site = MyAdminSite(name='myadmin') 
 admin_site.register(User, MyUserAdmin)
-admin_site.register(Program, ProgramAdmin)
+admin_site.register(Program)
 admin_site.register(Course, CourseAdmin)
 admin_site.register(Attribute, AttributeAdmin)
 admin_site.register(Indicator, IndicatorAdmin)
