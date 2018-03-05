@@ -22,19 +22,20 @@ class Attribute(models.Model):
 class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
     ID = models.CharField(max_length=20, primary_key=True)
+    programs = models.ManyToManyField('Program')
     description = models.TextField(max_length=1000)
     introduced = models.ManyToManyField('Course', related_name='introduces', blank=True)
     taught = models.ManyToManyField('Course', related_name='taught', blank=True)
     used = models.ManyToManyField('Course', related_name='used', blank=True)
     assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
+    
     def __str__(self):
         return self.ID
   
     
 class AssessmentMethod(models.Model):
-    indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
+    indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
     course = models.ForeignKey('course', on_delete=models.PROTECT)
-    programs = models.ManyToManyField('Program')
     criteria = models.CharField(max_length=1000)
     expectation4 = models.TextField(max_length=1000)
     expectation3 = models.TextField(max_length=1000)
@@ -74,6 +75,9 @@ class Assessment(models.Model):
     def __str__(self):
         return str(self.pk)
         
+    class Meta:
+        unique_together = (('semester','teacher','assessmentMethod','program'),)
+        
         
 class SemesterLU(models.Model):
     year = models.CharField(max_length=4, default=datetime.datetime.now().year)
@@ -92,7 +96,7 @@ def courseTeacherChange(sender, **kwargs):
         for pk in pk_set:
             teacher = User.objects.get(pk=pk)
             for am in course.assessmentmethod_set.all():
-                for program in am.programs.all():
+                for program in am.indicator.programs.all():
                     Assessment.objects.get_or_create(
                         program=program,
                         assessmentMethod=am,
@@ -114,37 +118,45 @@ def courseTeacherChange(sender, **kwargs):
                     assessment.delete()
 
 
-def assessmentMethodProgramChange(sender, **kwargs):
+def indicatorProgramChange(sender, **kwargs):
     pk_set = kwargs['pk_set']
-    am = kwargs['instance']
-    currentSemester = SemesterLU.objects.latest() 
-    print(currentSemester)
-    teachers = am.course.teachers.all()
+    ind = kwargs['instance']
+    currentSemester = SemesterLU.objects.latest()
+    ams = ind.assessmentmethod_set.all()
+    teachers = set([
+        t for l in [am.course.teachers.all() for am in ams] for t in l
+    ])
     
     if kwargs['action'] == 'post_add':
         programs = [Program.objects.get(pk = pk) for pk in pk_set]
-
         for teacher in teachers:
+            print(teacher)
             for program in programs:
-                Assessment.objects.get_or_create(
-                    program = program,
-                    assessmentMethod = am,
-                    teacher = teacher,
-                    semester = currentSemester
-                )
-    
+                for am in ams:
+                    print(program)
+                    print(am)
+                    print(teacher)
+                    print(currentSemester)
+                    Assessment.objects.get_or_create(
+                        program = program,
+                        assessmentMethod = am,
+                        teacher = teacher,
+                        semester = currentSemester
+                    )
+        
     if kwargs['action'] == 'pre_remove':
         programs = [Program.objects.get(pk=pk) for pk in pk_set]
         for program in programs:
-            assessments = Assessment.objects.all().filter(
-                assessmentMethod = am,
-                semester = currentSemester,
-                program = program
-            )
-            for assessment in assessments:
-                assessment.delete()
+            for am in ams:
+                assessments = Assessment.objects.all().filter(
+                    assessmentMethod = am,
+                    semester = currentSemester,
+                    program = program
+                )
+                for assessment in assessments:
+                    assessment.delete()
         
     
 m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
-m2m_changed.connect(assessmentMethodProgramChange, sender=AssessmentMethod.programs.through)
+m2m_changed.connect(indicatorProgramChange, sender=Indicator.programs.through)
  

@@ -51,12 +51,12 @@ class CourseAdmin(admin.ModelAdmin):
                 
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
-    filter_horizontal = ('programs',)
     can_delete = True
-    extra = 1
+    extra = 0
 
 
 class IndicatorAdmin(admin.ModelAdmin):
+    list_display=('ID', 'attribute', 'description')
     filter_horizontal = ('introduced', 'taught', 'used')
     inlines = (AssessmentMethodInline,)
 

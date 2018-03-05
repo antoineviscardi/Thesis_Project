@@ -56,7 +56,7 @@ class NewSemesterForm(forms.Form):
         self.fields['term'] = forms.ChoiceField(
             choices=SEASON_CHOICES, initial=iTerm)
         
-        courses = Course.objects.all().filter(current_flag=True)
+        courses = Course.objects.all()
         teachers = User.objects.all()
         teachersID = [t.id for t in teachers]
         
