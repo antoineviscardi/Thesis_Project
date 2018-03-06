@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
 from django.db.models.signals import m2m_changed, pre_save
+from django.core import exceptions
 import datetime
 
 
@@ -34,7 +35,7 @@ class Indicator(models.Model):
   
     
 class AssessmentMethod(models.Model):
-    indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
+    indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
     course = models.ForeignKey('course', on_delete=models.PROTECT)
     criteria = models.CharField(max_length=1000)
     expectation4 = models.TextField(max_length=1000)
@@ -52,7 +53,14 @@ class Program(models.Model):
     
     def __str__(self):
         return self.name
-
+    
+    def save(self, *args, **kwargs):
+        querry = Program.objects.all().filter(name=self.name)
+        if not querry:
+            super().save(*args, **kwargs)
+        else:
+            querry.update(current_flag=True)
+            
 
 class Course(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
@@ -63,7 +71,7 @@ class Course(models.Model):
                 
 
 class Assessment(models.Model):
-    program = models.ForeignKey(Program, on_delete=models.PROTECT)
+    program = models.ForeignKey(Program, on_delete=models.CASCADE)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -75,7 +83,7 @@ class Assessment(models.Model):
     
     def __str__(self):
         return str(self.pk)
-        
+  
     class Meta:
         unique_together = (('semester','teacher','assessmentMethod','program'),)
         

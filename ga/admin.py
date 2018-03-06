@@ -63,6 +63,21 @@ class IndicatorAdmin(admin.ModelAdmin):
     
 class AttributeAdmin(admin.ModelAdmin):
     ordering = ('name',)
+    
+
+class ProgramAdmin(admin.ModelAdmin):
+    exclude = ('current_flag',)
+    actions = ['cease_selected']
+    
+    def get_queryset(self, request):
+        qs = super(ProgramAdmin, self).get_queryset(request)
+        return qs.filter(current_flag=True)
+    
+    def cease_selected(self, request, queryset):
+        queryset.update(current_flag=False)
+    
+    cease_selected.short_description = "Cease selected programs without deleting"
+        
         
     
 class AssessmentAdmin(admin.ModelAdmin):
@@ -97,7 +112,7 @@ class AssessmentAdmin(admin.ModelAdmin):
  
 admin_site = MyAdminSite(name='myadmin') 
 admin_site.register(User, MyUserAdmin)
-admin_site.register(Program)
+admin_site.register(Program, ProgramAdmin)
 admin_site.register(Course, CourseAdmin)
 admin_site.register(Attribute, AttributeAdmin)
 admin_site.register(Indicator, IndicatorAdmin)
