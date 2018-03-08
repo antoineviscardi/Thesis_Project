@@ -6,6 +6,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.urls import path
 from django import forms
 from automated_email.views import EmailsView
+from export.views import ExportView
 from .views import NewSemesterView
 from .forms import MyUserCreationForm
 from .models import (Program, Course, Attribute, 
@@ -20,6 +21,7 @@ class MyAdminSite(AdminSite):
         my_urls = [
             path('new_semester/', self.admin_view(NewSemesterView.as_view())),
             path('emails/', self.admin_view(EmailsView.as_view())),
+            path('export/', self.admin_view(ExportView.as_view()))
         ]
         return my_urls + urls
 
