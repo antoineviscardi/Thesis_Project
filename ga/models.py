@@ -71,6 +71,7 @@ class Course(models.Model):
                 
 
 class Assessment(models.Model):
+    current_flag = models.BooleanField(default=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
