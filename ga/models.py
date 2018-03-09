@@ -55,11 +55,12 @@ class Program(models.Model):
         return self.name
     
     def save(self, *args, **kwargs):
-        querry = Program.objects.all().filter(name=self.name)
-        if not querry:
+        prog = Program.objects.get(name=self.name)
+        if not prog:
             super().save(*args, **kwargs)
         else:
-            querry.update(current_flag=True)
+            prog.current_flag=True
+            super(Program, prog).save(*args, **kwargs)
             
 
 class Course(models.Model):
@@ -71,7 +72,6 @@ class Course(models.Model):
                 
 
 class Assessment(models.Model):
-    current_flag = models.BooleanField(default=True)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)

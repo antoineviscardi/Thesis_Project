@@ -2,7 +2,7 @@ from ga.models import Assessment, Indicator, Course, SemesterLU
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
-from ga.models import SEASON_CHOICES, Course
+from ga.models import SEASON_CHOICES, Course, Program
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 import datetime
@@ -39,6 +39,26 @@ class AssessmentForm(forms.ModelForm):
             'numOf2': _('Needs Improvement - 2'),
             'numOf1': _('Unacceptable - 1'),
         }
+        
+class ProgramForm(forms.ModelForm):
+    class Meta:
+        model = Program
+        exclude = ('current_flag',)
+    
+    def clean(self):
+        return self.cleaned_data
+    
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        try:
+            prog = Program.objects.get(name=name)
+            print(prog.current_flag)
+            if prog.current_flag is True:
+                raise forms.ValidationError('Program with this Name already exists.')
+        except Program.DoesNotExist:
+            pass
+            
+        return name
 
     
 class NewSemesterForm(forms.Form):
