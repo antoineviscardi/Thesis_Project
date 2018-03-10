@@ -25,7 +25,7 @@ SECRET_KEY = '^-exc%!_1ab*o3n*)&npa&uxs$l!!ye_t!e8-o+w8k&4epnlfv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.30.20']
 
 
 # Application definition
@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'ga.apps.GaConfig',
     'automated_email.apps.AutomatedEmailConfig',
     'submit.apps.SubmitConfig',
+    'export.apps.ExportConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

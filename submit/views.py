@@ -17,7 +17,7 @@ class AssessmentUpdate(UpdateView):
 
 class CourseListView(ListView):
     def get_queryset(self):
-        return self.request.user.profile.course_set.all()
+        return self.request.user.course_set.all()
         
 
 class CourseDetailView(DetailView):
