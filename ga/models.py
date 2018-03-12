@@ -48,7 +48,25 @@ class AssessmentMethod(models.Model):
                                  choices=AYEAR_CHOICES)
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
-
+    current_flag = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        try:
+            am = AssessmentMethod.objects.get(
+                indicator=self.indicator,
+                course=self.course,
+                expectation4=self.expectation4,
+                expectation3=self.expectation3,
+                expectation2=self.expectation2,
+                expectation1=self.expectation1,
+                time_year=self.time_year,
+                time_semester=self.time_semester
+            )
+            am.current_flag = True
+            super(AssessmentMethod, am).save(*args, **kwargs)
+        except AssessmentMethod.DoesNotExist:
+            super().save(*args, **kwargs)
+            
 
 class Program(models.Model):
     name = models.CharField(max_length=50)

@@ -59,8 +59,19 @@ class AssessmentMethodAdmin(admin.ModelAdmin):
         'time_year', 'time_semester'
     )
     def cease_selected(self, request, queryset):
+        am_list = queryset.all()
+        assessments = set([
+            a for am in am_list for a in am.assessment_set.all().filter(
+                semester = SemesterLU.objects.latest()
+            )
+        ])
+        
+        for a in assessments:
+            a.delete();
+        
         queryset.update(current_flag=False)
-
+        
+    cease_selected.short_description = 'Cease selected assessment methods without deleting'
            
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
@@ -72,7 +83,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     filter_horizontal = ('introduced', 'taught', 'used')
     exclude = ('current_flag',)
     actions = ['cease_selected']
-    inlines = (AssessmentMethodInline,)
+    #inlines = (AssessmentMethodInline,)
     
     def cease_selected(self, request, queryset):
         queryset.update(current_flag=False)
@@ -115,11 +126,11 @@ class ProgramAdmin(admin.ModelAdmin):
     
     def cease_selected(self, request, queryset):
         prog_list = queryset.all()
-        assessments = [
+        assessments = set([
             a for p in prog_list for a in p.assessment_set.all().filter(
                 semester = SemesterLU.objects.latest()
             )
-        ]
+        ])
         
         for a in assessments:
             a.delete()    
