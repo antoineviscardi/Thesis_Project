@@ -12,18 +12,18 @@ SEASON_CHOICES = (('W', 'Winter'), ('A', 'Autumn'))
 
 
 class Attribute(models.Model):
-    ID = models.CharField(max_length=20, primary_key=True)
+    code = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=1000, blank=True)
     current_flag = models.BooleanField(default=True)
     
     def __str__(self):
-        return self.ID + ' ' + self.name
+        return self.code + ' ' + self.name
 
 
 class Indicator(models.Model):
     attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT)
-    ID = models.CharField(max_length=20, primary_key=True)
+    code = models.CharField(max_length=20)
     programs = models.ManyToManyField('Program')
     description = models.TextField(max_length=1000)
     introduced = models.ManyToManyField('Course', related_name='introduces', blank=True)
@@ -33,7 +33,7 @@ class Indicator(models.Model):
     current_flag = models.BooleanField(default=True)
     
     def __str__(self):
-        return self.ID
+        return self.code
   
     
 class AssessmentMethod(models.Model):
@@ -66,11 +66,11 @@ class Program(models.Model):
             
 
 class Course(models.Model):
-    ID = models.CharField(max_length=20, primary_key=True)
+    code = models.CharField(max_length=20)
     teachers = models.ManyToManyField(User, blank=True)
     
     def __str__(self):
-        return self.ID
+        return self.code
                 
 
 class Assessment(models.Model):

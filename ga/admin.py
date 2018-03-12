@@ -56,7 +56,7 @@ class AssessmentMethodInline(admin.StackedInline):
 
 
 class IndicatorAdmin(admin.ModelAdmin):
-    list_display=('ID', 'attribute', 'description')
+    list_display=('code', 'attribute', 'description')
     filter_horizontal = ('introduced', 'taught', 'used')
     exclude = ('current_flag',)
     actions = ['cease_selected']
