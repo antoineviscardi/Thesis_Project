@@ -58,7 +58,6 @@ class AssessmentMethodInline(admin.StackedInline):
 
 
 class IndicatorAdmin(admin.ModelAdmin):
-    list_display=('code', 'attribute', 'description')
     filter_horizontal = ('introduced', 'taught', 'used')
     exclude = ('current_flag',)
     actions = ['cease_selected']
@@ -68,6 +67,11 @@ class IndicatorAdmin(admin.ModelAdmin):
         queryset.update(current_flag=False)
     
     cease_selected.short_description = 'Cease selected indicators without deleting'
+    
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'programs':
+            kwargs['queryset'] = Program.objects.all().filter(current_flag=True)
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     
 class AttributeAdmin(admin.ModelAdmin):
@@ -94,17 +98,22 @@ class ProgramAdmin(admin.ModelAdmin):
         return qs.filter(current_flag=True)
     
     def cease_selected(self, request, queryset):
-        prog_list = list(queryset)
-        queryset.update(current_flag=False)
-        print(prog_list)
+        prog_list = queryset.all()
         assessments = [
             a for p in prog_list for a in p.assessment_set.all().filter(
-                current_flag = True
+                semester = SemesterLU.objects.latest()
             )
         ]
         
         for a in assessments:
-            a.delete()
+            a.delete()    
+        
+        for program in queryset:
+            prog = Program.objects.all().filter(id=program.id)
+            prog.update(current_flag=False)
+       
+            for i in Indicator.programs.through.objects.all().filter(program=program):
+                i.delete()
     
     cease_selected.short_description = 'Cease selected programs without deleting'
         
