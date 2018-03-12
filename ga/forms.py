@@ -52,7 +52,6 @@ class ProgramForm(forms.ModelForm):
         name = self.cleaned_data['name']
         try:
             prog = Program.objects.get(name=name)
-            print(prog.current_flag)
             if prog.current_flag is True:
                 raise forms.ValidationError('Program with this Name already exists.')
         except Program.DoesNotExist:

@@ -15,6 +15,7 @@ class Attribute(models.Model):
     ID = models.CharField(max_length=20, primary_key=True)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=1000, blank=True)
+    current_flag = models.BooleanField(default=True)
     
     def __str__(self):
         return self.ID + ' ' + self.name
@@ -29,6 +30,7 @@ class Indicator(models.Model):
     taught = models.ManyToManyField('Course', related_name='taught', blank=True)
     used = models.ManyToManyField('Course', related_name='used', blank=True)
     assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
+    current_flag = models.BooleanField(default=True)
     
     def __str__(self):
         return self.ID
@@ -55,12 +57,12 @@ class Program(models.Model):
         return self.name
     
     def save(self, *args, **kwargs):
-        prog = Program.objects.get(name=self.name)
-        if not prog:
-            super().save(*args, **kwargs)
-        else:
+        try:
+            prog = Program.objects.get(name=self.name)
             prog.current_flag=True
             super(Program, prog).save(*args, **kwargs)
+        except Program.DoesNotExist:
+            super().save(*args, **kwargs)
             
 
 class Course(models.Model):
