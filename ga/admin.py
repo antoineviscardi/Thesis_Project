@@ -49,8 +49,19 @@ admin.site.unregister(User)
 
 class CourseAdmin(admin.ModelAdmin):
     filter_horizontal = ('teachers',)
+    
 
-                
+class AssessmentMethodAdmin(admin.ModelAdmin):
+    exclude = ('current_flag',)
+    actions = ('cease_selected',)
+    list_display=(
+        'pk', 'indicator', 'course', 
+        'time_year', 'time_semester'
+    )
+    def cease_selected(self, request, queryset):
+        queryset.update(current_flag=False)
+
+           
 class AssessmentMethodInline(admin.StackedInline):
     model = AssessmentMethod
     can_delete = True
@@ -155,6 +166,7 @@ admin_site.register(Program, ProgramAdmin)
 admin_site.register(Course, CourseAdmin)
 admin_site.register(Attribute, AttributeAdmin)
 admin_site.register(Indicator, IndicatorAdmin)
+admin_site.register(AssessmentMethod, AssessmentMethodAdmin)
 admin_site.register(Assessment, AssessmentAdmin)
 
 
