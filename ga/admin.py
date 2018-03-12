@@ -8,7 +8,7 @@ from django import forms
 from automated_email.views import EmailsView
 from export.views import ExportView
 from .views import NewSemesterView
-from .forms import MyUserCreationForm
+from .forms import MyUserCreationForm, ProgramForm
 from .models import (Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -58,17 +58,35 @@ class AssessmentMethodInline(admin.StackedInline):
 
 
 class IndicatorAdmin(admin.ModelAdmin):
-    list_display=('ID', 'attribute', 'description')
+    list_display=('code', 'attribute', 'description')
     filter_horizontal = ('introduced', 'taught', 'used')
+    exclude = ('current_flag',)
+    actions = ['cease_selected']
     inlines = (AssessmentMethodInline,)
+    
+    def cease_selected(self, request, queryset):
+        queryset.update(current_flag=False)
+    
+    cease_selected.short_description = 'Cease selected indicators without deleting'
 
     
 class AttributeAdmin(admin.ModelAdmin):
     ordering = ('name',)
+    exclude = ('current_flag',)
+    actions = ['cease_selected']
+    
+    def get_queryset(self, request):
+        qs = super(AttributeAdmin, self).get_queryset(request)
+        return qs.filter(current_flag=True)
+    
+    def cease_selected(self, request, queryset):
+        queryset.update(current_flag=False)
+    
+    cease_selected.short_description = 'Cease selected attributes without deleting'
     
 
 class ProgramAdmin(admin.ModelAdmin):
-    exclude = ('current_flag',)
+    form = ProgramForm
     actions = ['cease_selected']
     
     def get_queryset(self, request):
@@ -76,9 +94,19 @@ class ProgramAdmin(admin.ModelAdmin):
         return qs.filter(current_flag=True)
     
     def cease_selected(self, request, queryset):
+        prog_list = list(queryset)
         queryset.update(current_flag=False)
+        print(prog_list)
+        assessments = [
+            a for p in prog_list for a in p.assessment_set.all().filter(
+                current_flag = True
+            )
+        ]
+        
+        for a in assessments:
+            a.delete()
     
-    cease_selected.short_description = "Cease selected programs without deleting"
+    cease_selected.short_description = 'Cease selected programs without deleting'
         
         
     
