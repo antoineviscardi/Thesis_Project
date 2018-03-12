@@ -59,6 +59,12 @@ class ProgramForm(forms.ModelForm):
             
         return name
 
+
+class IndicatorForm(forms.ModelForm):
+    class Meta:
+        model = Indicator
+        exclude = ('current_flag',)
+
     
 class NewSemesterForm(forms.Form):
     
