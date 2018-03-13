@@ -8,7 +8,7 @@ from django import forms
 from automated_email.views import EmailsView
 from export.views import ExportView
 from .views import NewSemesterView
-from .forms import MyUserCreationForm, ProgramForm
+from .forms import MyUserCreationForm, ProgramForm, AssessmentMethodForm
 from .models import (Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -52,12 +52,18 @@ class CourseAdmin(admin.ModelAdmin):
     
 
 class AssessmentMethodAdmin(admin.ModelAdmin):
+    form = AssessmentMethodForm
     exclude = ('current_flag',)
     actions = ('cease_selected',)
     list_display=(
         'pk', 'indicator', 'course', 
         'time_year', 'time_semester'
     )
+    
+    def get_queryset(self, request):
+        qs = super(AssessmentMethodAdmin, self).get_queryset(request)
+        return qs.filter(current_flag=True)
+    
     def cease_selected(self, request, queryset):
         am_list = queryset.all()
         assessments = set([
