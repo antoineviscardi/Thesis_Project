@@ -53,7 +53,6 @@ class CourseAdmin(admin.ModelAdmin):
     
 
 class AssessmentMethodAdmin(admin.ModelAdmin):
-    form = AssessmentMethodForm
     exclude = ('current_flag',)
     actions = ('cease_selected',)
     list_display=(
@@ -64,6 +63,17 @@ class AssessmentMethodAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(AssessmentMethodAdmin, self).get_queryset(request)
         return qs.filter(current_flag=True)
+        
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(AssessmentMethodAdmin, self).get_form(request, obj, **kwargs)
+        if obj is None:
+            form.clean = AssessmentMethodForm.clean
+        return form
+        
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'indicator':
+            kwargs['queryset'] = Indicator.objects.all().filter(current_flag=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
     def cease_selected(self, request, queryset):
         am_list = queryset.all()
@@ -103,20 +113,15 @@ class IndicatorAdmin(admin.ModelAdmin):
         programs = set(
             [p for i in indicator_list for p in i.programs.all()]
         )
-        ams = set(
-            [am for i in indicator_list for am in i.assessmentmethod_set.all()]
-        )
-        assessments = Assessment.objects.all().filter(
-            program__in=programs,
-            assessmentMethod__in=ams
-        )
-        
-        for a in assessments:
-            a.delete()    
+        ams = AssessmentMethod.objects.all().filter(
+            indicator__in=indicator_list,
+        )  
         
         for indicator in queryset:
             ind = Indicator.objects.all().filter(id=indicator.id)
             ind.update(current_flag=False)
+            
+        AssessmentMethodAdmin.cease_selected(AssessmentMethodAdmin, request, ams)
     
     cease_selected.short_description = 'Cease selected indicators without deleting'
     
@@ -124,7 +129,7 @@ class IndicatorAdmin(admin.ModelAdmin):
         if db_field.name == 'programs':
             kwargs['queryset'] = Program.objects.all().filter(current_flag=True)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
-
+        
     
 class AttributeAdmin(admin.ModelAdmin):
     ordering = ('name',)
@@ -143,6 +148,7 @@ class AttributeAdmin(admin.ModelAdmin):
 
 class ProgramAdmin(admin.ModelAdmin):
     actions = ['cease_selected']
+    exclude = ('current_flag',)
     
     def get_queryset(self, request):
         qs = super(ProgramAdmin, self).get_queryset(request)

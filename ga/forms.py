@@ -46,9 +46,6 @@ class ProgramForm(forms.ModelForm):
         exclude = ('current_flag',)
     
     def clean(self):
-        return self.cleaned_data
-    
-    def clean_name(self):
         name = self.cleaned_data['name']
         try:
             prog = Program.objects.get(name=name)
@@ -56,8 +53,7 @@ class ProgramForm(forms.ModelForm):
                 raise forms.ValidationError('Program with this Name already exists.')
         except Program.DoesNotExist:
             pass
-            
-        return name
+        return self.cleaned_data
         
 
 class AssessmentMethodForm(forms.ModelForm):
