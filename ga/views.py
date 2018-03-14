@@ -31,7 +31,7 @@ class NewSemesterView(FormView):
             ams = course.assessmentmethod_set.all()
             for teacher in teachers:
                 for am in ams:
-                    programs = am.programs.all()
+                    programs = am.indicator.programs.all()
                     for program in programs:
                         Assessment.objects.get_or_create(
                             program=program,

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
-from django.db.models.signals import m2m_changed, pre_save
+from django.db.models.signals import m2m_changed, post_save, post_delete
 from django.core import exceptions
 import datetime
 
@@ -26,14 +26,34 @@ class Indicator(models.Model):
     code = models.CharField(max_length=20)
     programs = models.ManyToManyField('Program')
     description = models.TextField(max_length=1000)
-    introduced = models.ManyToManyField('Course', related_name='introduces', blank=True)
+    introduced = models.ManyToManyField(
+        'Course', 
+        related_name='introduces', 
+        blank=True
+    )
     taught = models.ManyToManyField('Course', related_name='taught', blank=True)
     used = models.ManyToManyField('Course', related_name='used', blank=True)
-    assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
+    assessed = models.ManyToManyField(
+        'Course', 
+        through='AssessmentMethod', 
+        blank=True
+    )
     current_flag = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = (('code'),)
     
     def __str__(self):
         return self.code
+        
+    def save(self, *args, **kwargs):
+        try:
+            indicator = Indicator.objects.get(code=self.code)
+            indicator.current_flag=True
+            super(Indicator, indicator).save(*args, **kwargs)
+            print('HERE : ' + str(indicator.id))
+        except Indicator.DoesNotExist:
+            super().save(*args, **kwargs)
   
     
 class AssessmentMethod(models.Model):
@@ -48,6 +68,25 @@ class AssessmentMethod(models.Model):
                                  choices=AYEAR_CHOICES)
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
+    current_flag = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        try:
+            am = AssessmentMethod.objects.get(
+                indicator=self.indicator,
+                course=self.course,
+                expectation4=self.expectation4,
+                expectation3=self.expectation3,
+                expectation2=self.expectation2,
+                expectation1=self.expectation1,
+                time_year=self.time_year,
+                time_semester=self.time_semester
+            )
+            am.current_flag = True
+            super(AssessmentMethod, am).save(*args, **kwargs)
+        except AssessmentMethod.DoesNotExist:
+            super().save(*args, **kwargs)
+            
 
 class Program(models.Model):
     name = models.CharField(max_length=50)
@@ -68,13 +107,14 @@ class Program(models.Model):
 class Course(models.Model):
     code = models.CharField(max_length=20)
     teachers = models.ManyToManyField(User, blank=True)
+    current_flag = models.BooleanField(default=True)
     
     def __str__(self):
         return self.code
                 
 
 class Assessment(models.Model):
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    program = models.ForeignKey(Program, on_delete=models.PROTECT)
     assessmentMethod = models.ForeignKey(AssessmentMethod, 
                                          on_delete=models.PROTECT)
     teacher = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -103,7 +143,6 @@ def courseTeacherChange(sender, **kwargs):
     pk_set = kwargs['pk_set']
     course = kwargs['instance']
     currentSemester = SemesterLU.objects.latest()
-    print(currentSemester)
     if kwargs['action'] == 'post_add' :
         for pk in pk_set:
             teacher = User.objects.get(pk=pk)
@@ -167,8 +206,34 @@ def indicatorProgramChange(sender, **kwargs):
                 )
                 for assessment in assessments:
                     assessment.delete()
-        
+ 
+
+
+def AssessmentMethodPostSave(sender, instance, **kwargs):
+    progs = instance.indicator.programs.all()
+    cSemester = SemesterLU.objects.latest()
+    teachers = instance.course.teachers.all()
     
+    for prog in progs:
+        for teacher in teachers:
+            Assessment.objects.get_or_create(
+                program=prog,
+                assessmentMethod=instance,
+                teacher=teacher,
+                semester=cSemester
+            )   
+            
+def AssessmentMethodPostDelete(sender, instance, **kwargs):
+    cSemester = SemesterLU.objects.all()      
+    assessments = Assessment.objects.all().filter(
+        assessmentMethod = instance,
+        semester = cSemester
+    )
+    for a in assessments:
+        a.delete()
+    
+
 m2m_changed.connect(courseTeacherChange, sender=Course.teachers.through)
 m2m_changed.connect(indicatorProgramChange, sender=Indicator.programs.through)
- 
+post_save.connect(AssessmentMethodPostSave, sender=AssessmentMethod)
+post_delete.connect(AssessmentMethodPostDelete, sender=AssessmentMethod)

@@ -1,4 +1,4 @@
-from ga.models import Assessment, Indicator, Course, SemesterLU
+from ga.models import Assessment, Indicator, Course, SemesterLU, AssessmentMethod
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
@@ -46,9 +46,6 @@ class ProgramForm(forms.ModelForm):
         exclude = ('current_flag',)
     
     def clean(self):
-        return self.cleaned_data
-    
-    def clean_name(self):
         name = self.cleaned_data['name']
         try:
             prog = Program.objects.get(name=name)
@@ -56,9 +53,57 @@ class ProgramForm(forms.ModelForm):
                 raise forms.ValidationError('Program with this Name already exists.')
         except Program.DoesNotExist:
             pass
-            
-        return name
+        return self.cleaned_data
+        
 
+class AssessmentMethodForm(forms.ModelForm):
+    class Meta:
+        model = AssessmentMethod
+        exclude = ('current_flag',)
+        
+    def clean(self):
+        try:
+            am = AssessmentMethod.objects.get(
+                indicator = self.cleaned_data['indicator'],
+                course = self.cleaned_data['course'],
+                criteria = self.cleaned_data['criteria'],
+                expectation4 = self.cleaned_data['expectation4'],
+                expectation3 = self.cleaned_data['expectation3'],
+                expectation2 = self.cleaned_data['expectation2'],
+                expectation1 = self.cleaned_data['expectation1'],
+                time_year = self.cleaned_data['time_year'],
+                time_semester = self.cleaned_data['time_semester']
+            )
+            if am.current_flag is True:
+                raise forms.ValidationError(
+                    'This Assessment method already exists.'
+                )
+        except AssessmentMethod.DoesNotExist:
+            pass
+        
+        return self.cleaned_data
+
+
+class IndicatorForm(forms.ModelForm):
+    class Meta:
+        model = Indicator
+        exclude = ('current_flag',)
+    
+    def clean(self):
+        try:
+            i = Indicator.objects.get(
+                code = self.cleaned_data['code']
+            )
+            self.instance = i
+            if i.current_flag is True:
+                raise forms.ValidationError(
+                    'Indicator with this Code already exists.'
+                )
+        except Indicator.DoesNotExist:
+            pass
+        
+        return self.cleaned_data
+     
     
 class NewSemesterForm(forms.Form):
     
