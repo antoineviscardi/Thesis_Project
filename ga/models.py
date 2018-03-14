@@ -26,14 +26,34 @@ class Indicator(models.Model):
     code = models.CharField(max_length=20)
     programs = models.ManyToManyField('Program')
     description = models.TextField(max_length=1000)
-    introduced = models.ManyToManyField('Course', related_name='introduces', blank=True)
+    introduced = models.ManyToManyField(
+        'Course', 
+        related_name='introduces', 
+        blank=True
+    )
     taught = models.ManyToManyField('Course', related_name='taught', blank=True)
     used = models.ManyToManyField('Course', related_name='used', blank=True)
-    assessed = models.ManyToManyField('Course', through='AssessmentMethod', blank=True)
+    assessed = models.ManyToManyField(
+        'Course', 
+        through='AssessmentMethod', 
+        blank=True
+    )
     current_flag = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = (('code'),)
     
     def __str__(self):
         return self.code
+        
+    def save(self, *args, **kwargs):
+        try:
+            indicator = Indicator.objects.get(code=self.code)
+            indicator.current_flag=True
+            super(Indicator, indicator).save(*args, **kwargs)
+            print('HERE : ' + str(indicator.id))
+        except Indicator.DoesNotExist:
+            super().save(*args, **kwargs)
   
     
 class AssessmentMethod(models.Model):

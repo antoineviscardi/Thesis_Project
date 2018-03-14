@@ -84,13 +84,30 @@ class AssessmentMethodForm(forms.ModelForm):
                 )
         except AssessmentMethod.DoesNotExist:
             pass
+        
+        return self.cleaned_data
 
 
 class IndicatorForm(forms.ModelForm):
     class Meta:
         model = Indicator
         exclude = ('current_flag',)
-
+    
+    def clean(self):
+        try:
+            i = Indicator.objects.get(
+                code = self.cleaned_data['code']
+            )
+            self.instance = i
+            if i.current_flag is True:
+                raise forms.ValidationError(
+                    'Indicator with this Code already exists.'
+                )
+        except Indicator.DoesNotExist:
+            pass
+        
+        return self.cleaned_data
+     
     
 class NewSemesterForm(forms.Form):
     
