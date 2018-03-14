@@ -86,12 +86,17 @@ class AttributeAdmin(admin.ModelAdmin):
     
 
 class ProgramAdmin(admin.ModelAdmin):
-    form = ProgramForm
     actions = ['cease_selected']
     
     def get_queryset(self, request):
         qs = super(ProgramAdmin, self).get_queryset(request)
         return qs.filter(current_flag=True)
+        
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(ProgramAdmin, self).get_form(request, obj, **kwargs)
+        if obj is None:
+            form.clean = ProgramForm.clean
+        return form
     
     def cease_selected(self, request, queryset):
         prog_list = list(queryset)
