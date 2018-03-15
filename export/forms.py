@@ -7,8 +7,15 @@ class ExportForm(forms.Form):
         queryset = Program.objects.all()
     )
     
-    semesters = SemesterLU.objects.all()
-    yearChoices = set([int(s.year) for s in semesters])
+    winter_semesters = SemesterLU.objects.filter(term='W')
+    autumn_semesters = SemesterLU.objects.filter(term='A')
+    
+    yearChoices = set([int(s.year) for s in autumn_semesters])
+    
+    yearChoices |= set([(int(s.year) - 1) for s in winter_semesters])
+    
+        
+    #yearChoices = set([int(s.year) for s in semesters])
     yearChoices = [(y, '{}-{}'.format(y, int(y) + 1)) for y in yearChoices]
     
     years = forms.MultipleChoiceField(
