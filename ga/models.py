@@ -125,6 +125,14 @@ class Course(models.Model):
     
     def __str__(self):
         return self.code
+        
+    def save(self, *args, **kwargs):
+        try:
+            course = Course.objects.all().get(code=self.code)
+            course.current_flag = True
+            super(Course, course).save(*args, **kwargs)
+        except Course.DoesNotExist:
+            super().save(*args, **kwargs)
                 
 
 class Assessment(models.Model):

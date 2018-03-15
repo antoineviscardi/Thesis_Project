@@ -1,4 +1,4 @@
-from ga.models import SEASON_CHOICES, Assessment, Indicator, Course, SemesterLU, AssessmentMethod, Program, Attribute
+from ga.models import SEASON_CHOICES, Assessment, Indicator, Course, SemesterLU, AssessmentMethod, Program, Attribute, Course
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
@@ -122,6 +122,27 @@ class AttributeForm(forms.ModelForm):
         except Attribute.DoesNotExist:
             pass
             
+        return self.cleaned_data
+        
+
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        exclude = ('current_flag',)
+    
+    def clean(self):
+        try:
+            c = Course.objects.get(
+                code = self.cleaned_data['code']
+            )
+            self.instance = c
+            if c.current_flag is True:
+                raise forms.ValidationError(
+                    'Course with this Code already exists.'
+                )
+        except Course.DoesNotExist:
+            pass
+        
         return self.cleaned_data
      
     
