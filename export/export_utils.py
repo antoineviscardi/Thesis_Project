@@ -15,24 +15,70 @@ def toLetters(y, x):
     result += '$' + str(y+1)
     return result
 
-# Create your views here.
 
-#yearsWanted = ['2001','2002']
-#programs = Program.objects.all()
-#prog = programs[0]
+def slice_data(years):
+    print(years)
+    # list of years as pair of terms (A, W)
+    terms = [
+        SemesterLU.objects.filter(year=y, term='A') |
+        SemesterLU.objects.filter(year=str(int(y)+1),term='W')
+        for y in years 
+    ]
+    
+    attributes = set([])
+    indicators = set([])
+    methods = set([])
+    assessments = set([])
+    
+    for term in terms:
+    
+        # list of assessments in that year
+        ass = set(Assessment.objects.filter(
+            semester__in=term
+        ))
+        assessments |= ass
+        print(ass)
+        
+        # list of assessment methods in that year
+        ams = set([a.assessmentMethod for a in assessments])
+        methods |= ams
+        
+        # list of indicators in that year
+        inds = set([am.indicator for am in ams])
+        indicators |= inds
+        
+        # list of attributes in that year
+        atts = set([ind.attribute for ind in inds])
+        attributes |= atts
+        
+        return list(attributes), list(indicators), list(methods), list(assessments)
+    
+    return slices
+    
 
+
+#def export(yearsWanted,prog):
 def export(yearsWanted,prog):
 
-    # xlsx code here
-    workbook = xlsxwriter.Workbook(
-        'GAMS_'
-        + prog.name 
-        + '_' 
-        + yearsWanted[0] 
-        + '-' 
-        + str((int(yearsWanted[-1]))+1) 
-        +'.xlsx'
-    )
+    #yearsWanted = ['2000','2001']
+    #programs = Program.objects.all()
+    #prog = programs[0]
+
+    # get querysets
+    attributes, indicators, assessMethods, assessments = slice_data(yearsWanted)
+    print(attributes, indicators, assessMethods, assessments)
+    
+    # get attributes
+    #attributes = Attribute.objects.all()
+
+    numOfAttribs = len(attributes)
+    numOfYears = len(yearsWanted)
+
+    # filename
+    file_name = 'GAMS_'+prog.name+ '_'+yearsWanted[0]+'-'+str((int(yearsWanted[-1]))+1)+'.xlsx'
+
+    # init workbook
+    workbook = xlsxwriter.Workbook(file_name)
 
     # Define format for headers
     headerFormat = workbook.add_format()
@@ -52,18 +98,26 @@ def export(yearsWanted,prog):
     dataFormat.set_text_wrap()
     dataFormat.set_border(1)
 
+    # overview x and y values
+    aX = 0
+    aY = 3
+    dX = 1
+    dY = 1
+
+    # chart indexing
+    cX_offset = 8
+    cY_offset = 17
+    cX = 0
+    cY = numOfAttribs + 5
+
+
     # worksheet for overview (All)
     wsAll = workbook.add_worksheet('All')
 
     # headers for overview
     wsAll.set_column('A:A',12)   
     wsAll.merge_range('A1:A3', 'Graduate Attributes', headerFormat)
-
-    # overview x and y values
-    aX = 0
-    aY = 3
-    dX = 1
-    dY = 1
+ 
 
     # overview headers
     for yearW in yearsWanted:
@@ -72,23 +126,40 @@ def export(yearsWanted,prog):
       wsAll.write(dY+1,dX+1,'σ', headerFormat)
       dX += 2
     wsAll.merge_range(0,1,0,dX-1,'Results', headerFormat)
+
+    dX += 2
+    dY = 1
+    x_offset = dX
+    for yearW in yearsWanted:
+      wsAll.merge_range(dY,dX,dY,dX+1,yearW + '-' + str(int(yearW)+1), headerFormat)
+      wsAll.merge_range(dY+1,dX,dY+1,dX+1,'Avg', headerFormat)
+      dX += 2
+    wsAll.merge_range(0,x_offset,0,dX-1,'Results', headerFormat)
+
     dX = 1
     dY = 3
 
     # divide into attributes
-    attributes = Attribute.objects.all()
     for attrib in attributes:
 
+        # each attribute has its chart in the overview
+        attribChart = workbook.add_chart({'type':'line'})
+        attribChart.set_x_axis({'name':'Assessment Methods'})
+        attribChart.set_y_axis({'name':'Assessment','min':0,'max':5,'minor_unit':0,'major_unit':1})
+        attribChart.set_title({'name': attrib.code + '-' + attrib.name})
+        attribChart.set_chartarea({'border':{'color':'black'}})
+
         # write attributes into overview
-        wsAll.write(aY,aX,attrib.ID, dataFormat)
+        wsAll.write(aY,aX,attrib.code, dataFormat)
         aY += 1
 
         # set dX back to beginning of line
         dX = 1
 
-        ws = workbook.add_worksheet(attrib.ID)
+        # worksheet for each attribute (data)
+        ws = workbook.add_worksheet(attrib.code)
 
-        # Row/column sizes for header
+        # Row/column sizes for headers
         ws.set_row(0,25)
         ws.set_row(1,25)
         ws.set_row(2,25)
@@ -97,9 +168,10 @@ def export(yearsWanted,prog):
         ws.set_column('D:F', 10)
         ws.set_column('G:I', 12)
 
-        # Header Content
+
+        # Headers Content
         ws.merge_range('A1:A2', '', headerFormat)
-        ws.merge_range('B1:C2', attrib.ID + ' ' + attrib.name, headerFormat)
+        ws.merge_range('B1:C2', attrib.code + ' ' + attrib.name, headerFormat)
         ws.merge_range('D1:F2', 'Courses', headerFormat)
         ws.write('A3', 'Assessment Code', headerFormat)
         ws.write('B3', 'Related (sub)attribute', headerFormat)
@@ -112,26 +184,36 @@ def export(yearsWanted,prog):
         ws.merge_range('I1:I3', 'Time of asessment', headerFormat)
 
         
-
+        # worksheet indexes (data)
         x = 0
-        y = 3
+        y = 3        
 
         # list of indicators for attribute
-        indicators = Indicator.objects.filter(attribute=attrib,programs__in=[prog])
+        #indicators = Indicator.objects.filter(attribute=attrib,programs__in=[prog])
        
         for indic in indicators:
+            
+            # filter indicators
+            if indic.attribute != attrib or prog not in indic.programs.all():
+              continue 
+            
             # list of assessmentMethods for this indicator
-            assessMethods = AssessmentMethod.objects.filter(indicator=indic)
+            #assessMethods = AssessmentMethod.objects.filter(indicator=indic)
 
             # write assessment code, course assessed and time of assessment
             i = 0
             for method in assessMethods:
+            
+                # filter methods
+                if method.indicator != indic:
+                  continue
+            
                 x = 0
                 # assessment codes
-                ws.write(y,x,method.indicator.ID + '-' + str(i+1), dataFormat)             
+                ws.write(y,x,method.indicator.code + '-' + str(i+1), dataFormat)              
                 x = 6
                 # course assessed
-                ws.write(y,x,method.course.ID, dataFormat)
+                ws.write(y,x,method.course.code, dataFormat)
                 x = 8
                 # time of assessment
                 ws.write(y,x,method.time_semester + ' of ' + method.time_year + 'th year', dataFormat)
@@ -146,7 +228,7 @@ def export(yearsWanted,prog):
                 courses = indic.introduced.all()
                 s = ''
                 for c in courses:
-                    s = s + ' ' + c.ID
+                    s = s + ' ' + c.code
                 if i == 0:
                     ws.write(y,x,s, dataFormat)
                 else:
@@ -156,7 +238,7 @@ def export(yearsWanted,prog):
                 courses = indic.taught.all()
                 s = ''
                 for c in courses:
-                    s = s + ' ' + c.ID
+                    s = s + ' ' + c.code
                 if i == 0:
                     ws.write(y,x,s, dataFormat)
                 else:
@@ -166,13 +248,13 @@ def export(yearsWanted,prog):
                 courses = indic.used.all()
                 s = ''
                 for c in courses:
-                    s = s + ' ' + c.ID
+                    s = s + ' ' + c.code
                 if i == 0:
                     ws.write(y,x,s, dataFormat)
                 else:
                     ws.merge_range(y-i,x,y,x,s, dataFormat) 
                 i = i+1
-                y = y+1
+                y = y+1                
         
         #x = 0    
         #ws.merge_range(y,x,y,x+8,'end of indicators', dataFormat)
@@ -219,7 +301,13 @@ def export(yearsWanted,prog):
           semesters = autumnSemester | winterSemester          
 
           for indic in indicators:
-            assessMethods = AssessmentMethod.objects.filter(indicator=indic)
+          
+            # filter indicators
+            if indic.attribute != attrib or prog not in indic.programs.all():
+              continue 
+              
+            #assessMethods = AssessmentMethod.objects.filter(indicator=indic)
+            
             indicOnes = 0
             indicTwos = 0
             indicThrees = 0
@@ -229,8 +317,15 @@ def export(yearsWanted,prog):
             indicDev = 0
 
             i = 0
+            
             for method in assessMethods:
-              assessments = Assessment.objects.filter(assessmentMethod=method,semester__in=semesters)
+              
+              # filter methods
+              if method.indicator != indic:
+                continue
+              
+              #assessments = Assessment.objects.filter(assessmentMethod=method,semester__in=semesters)
+              
               ones = 0
               twos = 0
               threes = 0
@@ -238,7 +333,13 @@ def export(yearsWanted,prog):
               totalNum = 0
               avg = 0
               dev = 0
+              
               for assess in assessments:
+              
+                # filter assessments
+                if assess.assessmentMethod != method or assess.semester not in semesters:
+                  continue
+              
                 # count number of 1s
                 if(assess.numOf1 != None):
                   ones += assess.numOf1
@@ -331,24 +432,36 @@ def export(yearsWanted,prog):
           ws.write(y,x+9,attribAvg, headerFormat)
           ws.write(y,x+10,attribDev, headerFormat)
           wsAll.write(dY,dX,attribAvg, dataFormat)
-          wsAll.write(dY,dX+1,attribDev, dataFormat)
+          wsAll.merge_range(dY,dX+2+numOfYears*2,dY,dX+3+numOfYears*2, attribAvg, dataFormat)
+          dX += 1
+          wsAll.write(dY,dX,attribDev, dataFormat)
 
           y = 0
           x += 11
-          dX += 2
+          dX += 1
+
+          # add assessment totals to attribute chart
+          attribChart.add_series({
+            'categories': [attrib.code,3,0,3+len(assessMethods)-1,0],
+            'values': [attrib.code,y+3,x-5,y+3+len(assessMethods)-1,x-5],
+            'marker': {'type':'diamond'},
+            'name': yearW + '-' + str(int(yearW)+1)
+          })
+
         # end of year
+        
+        wsAll.insert_chart(cY,cX,attribChart)
+        cY += cY_offset
+        dY += 1        
+      #end of attribute    
 
-        dY += 1
-        #ws.write(y,x,'end of sheet')
-
-    # Charts
-    numOfAttribs = len(attributes)
+    # Global chart by attribute
     if(numOfAttribs > 0):
-      globalChart = workbook.add_chart({'type':'line'})
+      byAttribChart = workbook.add_chart({'type':'line'})
       dX = 1
       dY = 3
       for year in yearsWanted:
-        globalChart.add_series({
+        byAttribChart.add_series({
           'categories': ['All',3,0,3+numOfAttribs-1,0],
           'values': ['All',3,dX,3+numOfAttribs-1,dX],
           'marker': {'type':'diamond'},
@@ -356,13 +469,94 @@ def export(yearsWanted,prog):
         })
         dX += 2
 
-    globalChart.set_x_axis({'name':'Attributes'})
-    globalChart.set_y_axis({'name':'Assessment','min':0,'max':5,'minor_unit':0,'major_unit':1})
-    globalChart.set_title({'name':'Results'})
-    wsAll.insert_chart('G3',globalChart)
+        byAttribChart.set_x_axis({'name':'Attributes'})
+        byAttribChart.set_y_axis({'name':'Assessment','min':0,'max':5,'minor_unit':0,'major_unit':1})
+        byAttribChart.set_title({'name':'Results by attribute'})
+        byAttribChart.set_chartarea({'border':{'color':'black'}})
+        wsAll.insert_chart(cY,cX,byAttribChart)
+
+    cY += cY_offset
+
+    # Global charts by year (3 attributes per chart)  
+    if(numOfAttribs > 0):
+      dX = 1 + 2 + numOfYears*2
+      dY = 3
+      attributeChunks = [attributes[x:x+3] for x in range(0,numOfAttribs,3)]  
+      for chunk in attributeChunks:
+        byYearChart = workbook.add_chart({'type':'line'})
+        for attrib in chunk:       
+          byYearChart.add_series({
+            'categories': ['All',1,1,1,numOfYears*2],
+            'values': ['All',dY,dX,dY,dX+(numOfYears*2)-1],
+            'marker': {'type':'diamond'},
+            'name': attrib.code
+          })
+          dY += 1
+        byYearChart.set_x_axis({'name':'Year'})
+        byYearChart.set_y_axis({'name':'Assessment','min':0,'max':5,'minor_unit':0,'major_unit':1})
+        byYearChart.set_title({'name':'Results by year (attributes ' + chunk[0].code + '-' + chunk[-1].code + ')'})
+        byYearChart.set_chartarea({'border':{'color':'black'}})
+        wsAll.insert_chart(cY,cX,byYearChart)
+        cY += cY_offset
+        
+    # rubric stuff
+    for attrib in attributes:
+
+      # worsheet for each attribute (rubric)
+      wsR = workbook.add_worksheet(attrib.code + 'tools')
+
+      wsR.set_column('A:A', 18)
+      wsR.set_column('B:F', 25)
+
+      wsR.write(0,0,'Rubrics for ' + attrib.name, dataFormat)
+      wsR.write(2,0,'Assessment Code', headerFormat)
+      wsR.write(2,1,'Criteria', headerFormat)
+      wsR.write(2,2,'Exceeds Expectations - 4', headerFormat)
+      wsR.write(2,3,'Meets Expectations - 3', headerFormat)
+      wsR.write(2,4,'Needs Improvement - 2', headerFormat)
+      wsR.write(2,5,'Unacceptable - 1', headerFormat)
+
+      # worksheet indexes (rubric)
+      rX = 0
+      rY = 3
+    
+      # list of indicators for attribute
+      #indicators = Indicator.objects.filter(attribute=attrib,programs__in=[prog])
+      for indic in indicators:
+      
+        # filter indicators
+        if indic.attribute != attrib or prog not in indic.programs.all():
+          continue   
+      
+        # list of assessmentMethods for this indicator
+        #assessMethods = AssessmentMethod.objects.filter(indicator=indic)
+        i = 0
+        for method in assessMethods:
+         
+          if method.indicator != indic:
+            continue
+         
+          rX = 0
+          wsR.write(rY,rX,method.indicator.code + '-' + str(i+1), dataFormat)
+          rX += 1
+          wsR.write(rY,rX,method.criteria, dataFormat)
+          rX += 1
+          wsR.write(rY,rX,method.expectation4, dataFormat)
+          rX += 1
+          wsR.write(rY,rX,method.expectation3, dataFormat)
+          rX += 1
+          wsR.write(rY,rX,method.expectation2, dataFormat)
+          rX += 1
+          wsR.write(rY,rX,method.expectation1, dataFormat)
+          i = i+1
+          rY = rY+1
       
     workbook.close()
 
     # xlsx code end
 
-    return HttpResponse("<h1> Exported excel")
+    response = HttpResponse(open(file_name,"rb"),content_type='application/vdn.ms-excel')
+    response['Content-Disposition'] = 'attachment;filename="'+file_name+'"'
+
+    return response
+    #return HttpResponse("<h1> Exported excel")
