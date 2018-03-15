@@ -9,7 +9,7 @@ from automated_email.views import EmailsView
 from export.views import ExportView
 from .views import NewSemesterView
 from .forms import (MyUserCreationForm, ProgramForm, AssessmentMethodForm, 
-                    IndicatorForm)
+                    IndicatorForm, AttributeForm)
 from .models import (Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -110,18 +110,15 @@ class IndicatorAdmin(admin.ModelAdmin):
     
     def cease_selected(self, request, queryset):
         indicator_list = queryset.all()
-        programs = set(
-            [p for i in indicator_list for p in i.programs.all()]
-        )
         ams = AssessmentMethod.objects.all().filter(
             indicator__in=indicator_list,
         )  
-        
-        for indicator in queryset:
+        AssessmentMethodAdmin.cease_selected(AssessmentMethodAdmin, request, ams)
+        for indicator in queryset.all():
             ind = Indicator.objects.all().filter(id=indicator.id)
             ind.update(current_flag=False)
             
-        AssessmentMethodAdmin.cease_selected(AssessmentMethodAdmin, request, ams)
+        
     
     cease_selected.short_description = 'Cease selected indicators without deleting'
     
@@ -139,9 +136,25 @@ class AttributeAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(AttributeAdmin, self).get_queryset(request)
         return qs.filter(current_flag=True)
+        
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is None:
+            form = super(AttributeAdmin, self).get_form(request, obj, **kwargs)
+            form.clean = AttributeForm.clean
+            return form
+        else:
+            return super(AttributeAdmin, self).get_form(request, obj, **kwargs)
     
     def cease_selected(self, request, queryset):
-        queryset.update(current_flag=False)
+        attribute_list = queryset.all()
+        indicator_list = Indicator.objects.all().filter(
+            attribute__in=attribute_list
+        )
+        IndicatorAdmin.cease_selected(IndicatorAdmin, request, indicator_list)
+        for attribute in queryset:
+            att = Attribute.objects.all().filter(id=attribute.id)
+            att.update(current_flag=False)
+        print(indicator_list.all())
     
     cease_selected.short_description = 'Cease selected attributes without deleting'
     

@@ -17,8 +17,21 @@ class Attribute(models.Model):
     description = models.CharField(max_length=1000, blank=True)
     current_flag = models.BooleanField(default=True)
     
+    class Meta:
+        unique_together = (('code'),)
+    
     def __str__(self):
         return self.code + ' ' + self.name
+        
+    def save(self, *args, **kwargs):
+        try:
+            attribute = Attribute.objects.get(code=self.code)
+            attribute.current_flag=True
+            attribute.name = self.name
+            attribute.description = self.description
+            super(Attribute, attribute).save(*args, **kwargs)
+        except Attribute.DoesNotExist:
+            super().save(*args, **kwargs)
 
 
 class Indicator(models.Model):
@@ -48,10 +61,11 @@ class Indicator(models.Model):
         
     def save(self, *args, **kwargs):
         try:
-            indicator = Indicator.objects.get(code=self.code)
-            indicator.current_flag=True
+            indicator = Indicator.objects.all().get(code=self.code)
+            indicator.current_flag = True
+            indicator.attribute = self.attribute
+            indicator.description =self.description
             super(Indicator, indicator).save(*args, **kwargs)
-            print('HERE : ' + str(indicator.id))
         except Indicator.DoesNotExist:
             super().save(*args, **kwargs)
   

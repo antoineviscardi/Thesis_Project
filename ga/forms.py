@@ -1,8 +1,7 @@
-from ga.models import Assessment, Indicator, Course, SemesterLU, AssessmentMethod
+from ga.models import SEASON_CHOICES, Assessment, Indicator, Course, SemesterLU, AssessmentMethod, Program, Attribute
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
-from ga.models import SEASON_CHOICES, Course, Program
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 import datetime
@@ -102,6 +101,27 @@ class IndicatorForm(forms.ModelForm):
         except Indicator.DoesNotExist:
             pass
         
+        return self.cleaned_data
+        
+
+class AttributeForm(forms.ModelForm):
+    class Meta:
+        model = Attribute
+        exclude = ('current_flag',)
+    
+    def clean(self):
+        try:
+            a = Attribute.objects.get(
+                code = self.cleaned_data['code']
+            )
+            self.instance = a
+            if a.current_flag is True:
+                raise forms.ValidationError(
+                    'Attribute with this Code already exists.'
+                )
+        except Attribute.DoesNotExist:
+            pass
+            
         return self.cleaned_data
      
     
