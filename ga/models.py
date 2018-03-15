@@ -160,8 +160,10 @@ def courseTeacherChange(sender, **kwargs):
     if kwargs['action'] == 'post_add' :
         for pk in pk_set:
             teacher = User.objects.get(pk=pk)
-            for am in course.assessmentmethod_set.all():
-                for program in am.indicator.programs.all():
+            for am in course.assessmentmethod_set.all() \
+            .filter(current_flag=True):
+                for program in am.indicator.programs.all() \
+                .filter(current_flag=True):
                     Assessment.objects.get_or_create(
                         program=program,
                         assessmentMethod=am,
