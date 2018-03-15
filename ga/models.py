@@ -74,14 +74,15 @@ class AssessmentMethod(models.Model):
     indicator = models.ForeignKey(Indicator, on_delete=models.PROTECT)
     course = models.ForeignKey('course', on_delete=models.PROTECT)
     criteria = models.CharField(max_length=1000)
-    expectation4 = models.TextField(max_length=1000)
-    expectation3 = models.TextField(max_length=1000)
-    expectation2 = models.TextField(max_length=1000)
-    expectation1 = models.TextField(max_length=1000)
     time_year = models.CharField(max_length=1, 
                                  choices=AYEAR_CHOICES)
     time_semester = models.CharField(max_length=1, 
                                      choices=SEASON_CHOICES)
+    assessment_medium = models.CharField(max_length=100)
+    expectation4 = models.TextField(max_length=1000)
+    expectation3 = models.TextField(max_length=1000)
+    expectation2 = models.TextField(max_length=1000)
+    expectation1 = models.TextField(max_length=1000)
     current_flag = models.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
@@ -94,7 +95,8 @@ class AssessmentMethod(models.Model):
                 expectation2=self.expectation2,
                 expectation1=self.expectation1,
                 time_year=self.time_year,
-                time_semester=self.time_semester
+                time_semester=self.time_semester,
+                assessment_medium = self.assessment_medium
             )
             am.current_flag = True
             super(AssessmentMethod, am).save(*args, **kwargs)
