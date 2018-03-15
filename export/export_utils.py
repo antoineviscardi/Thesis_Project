@@ -78,7 +78,11 @@ def export(yearsWanted,prog):
     file_name = 'GAMS_'+prog.name+ '_'+yearsWanted[0]+'-'+str((int(yearsWanted[-1]))+1)+'.xlsx'
 
     # init workbook
-    workbook = xlsxwriter.Workbook(file_name)
+    
+    response = HttpResponse(content_type='application/vdn.ms-excel')
+    response['Content-Disposition'] = 'attachment;filename="'+file_name+'"'
+    
+    workbook = xlsxwriter.Workbook(response, {'in_memory' : True})
 
     # Define format for headers
     headerFormat = workbook.add_format()
@@ -214,6 +218,9 @@ def export(yearsWanted,prog):
                 x = 6
                 # course assessed
                 ws.write(y,x,method.course.code, dataFormat)
+                x= 7
+                # eval medium
+                ws.write(y,x,method.assessment_medium, dataFormat)
                 x = 8
                 # time of assessment
                 ws.write(y,x,method.time_semester + ' of ' + method.time_year + 'th year', dataFormat)
@@ -555,8 +562,7 @@ def export(yearsWanted,prog):
 
     # xlsx code end
 
-    response = HttpResponse(open(file_name,"rb"),content_type='application/vdn.ms-excel')
-    response['Content-Disposition'] = 'attachment;filename="'+file_name+'"'
+
 
     return response
     #return HttpResponse("<h1> Exported excel")

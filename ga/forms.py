@@ -71,7 +71,8 @@ class AssessmentMethodForm(forms.ModelForm):
                 expectation2 = self.cleaned_data['expectation2'],
                 expectation1 = self.cleaned_data['expectation1'],
                 time_year = self.cleaned_data['time_year'],
-                time_semester = self.cleaned_data['time_semester']
+                time_semester = self.cleaned_data['time_semester'],
+                assessment_medium = self.cleaned_data['assessment_medium']
             )
             if am.current_flag is True:
                 raise forms.ValidationError(
