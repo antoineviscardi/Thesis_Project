@@ -9,7 +9,7 @@ from automated_email.views import EmailsView
 from export.views import ExportView
 from .views import NewSemesterView
 from .forms import (MyUserCreationForm, ProgramForm, AssessmentMethodForm, 
-                    IndicatorForm, AttributeForm)
+                    IndicatorForm, AttributeForm, CourseForm)
 from .models import (Program, Course, Attribute, 
                      Indicator, AssessmentMethod, Assessment,
                      SemesterLU)
@@ -49,7 +49,31 @@ admin.site.unregister(User)
 
 
 class CourseAdmin(admin.ModelAdmin):
+    actions = ('cease_selected',)
     filter_horizontal = ('teachers',)
+    exclude = ('current_flag',)
+    
+    def get_queryset(self, request):
+        qs = super(CourseAdmin, self).get_queryset(request)
+        return qs.filter(current_flag=True)
+        
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(CourseAdmin, self).get_form(request, obj, **kwargs)
+        if obj is None:
+            form.clean = CourseForm.clean
+        return form
+    
+    def cease_selected(self, request, queryset):
+        course_list = queryset.all()
+        ams = AssessmentMethod.objects.all().filter(
+            course__in=course_list,
+        )
+        AssessmentMethodAdmin.cease_selected(AssessmentMethodAdmin, request, ams)
+        for course in queryset.all():
+            c = Course.objects.all().filter(id=course.id)
+            c.update(current_flag=False)
+
+    cease_selected.short_description = 'Cease selected courses without deleting'           
     
 
 class AssessmentMethodAdmin(admin.ModelAdmin):
@@ -192,8 +216,7 @@ class ProgramAdmin(admin.ModelAdmin):
                 i.delete()
     
     cease_selected.short_description = 'Cease selected programs without deleting'
-        
-        
+       
     
 class AssessmentAdmin(admin.ModelAdmin):
     fields = ('teacher', 'program', 'numOf4', 'numOf3', 'numOf2', 'numOf1')
