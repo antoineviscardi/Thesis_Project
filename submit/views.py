@@ -19,6 +19,11 @@ class CourseListView(ListView):
     def get_queryset(self):
         return self.request.user.course_set.all()
         
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['has_permission'] = True
+        return context
+        
 
 class CourseDetailView(DetailView):
     
@@ -26,6 +31,8 @@ class CourseDetailView(DetailView):
    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        context['has_permission'] = True
         
         ams = AssessmentMethod.objects.all().filter(
             course=self.object

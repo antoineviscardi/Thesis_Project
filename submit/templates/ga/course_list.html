@@ -1,3 +1,8 @@
+{% extends 'base_site.html' %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
 <h1>Courses</h1>
 <ul>
 {% for course in object_list %}
@@ -7,3 +12,4 @@
     <p> No classes are available </p>
 {% endfor %}
 </ul>
+{% endblock %}

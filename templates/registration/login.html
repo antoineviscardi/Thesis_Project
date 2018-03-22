@@ -1,19 +1,39 @@
-{% extends 'base.html' %}
-  
-{% block title %}Login{% endblock %}
+{% extends 'base_site.html' %}
+{% load i18n static %}
+
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+{{ form.media }}
+{% endblock %} 
+
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
 
 {% block content %}
-
-  <form method="post" action="{% url 'login' %}">
-  {% csrf_token %}
-      <table>{{ form.as_table }}</table>
-      <input type="submit" value="Login"/>
+<div id="content-main">  
+  <form action="{% url 'login' %}" method="post" id="login-form">{% csrf_token %}
+  <div class="form-row">
+    {{ form.username.errors }}
+    {{ form.username.label_tag }} {{ form.username }}
+  </div>
+  <div class="form-row">
+    {{ form.password.errors }}
+    {{ form.password.label_tag }} {{ form.password }}
+    <input type="hidden" name="next" value="{{ next }}">
+  </div>
+  
+  <div class="password-reset-link">
+    <a href="/password_reset">{% trans 'First time using the system or forgot your password? ' %}</a>
+</div>
+  
+  <div class="submit-row">
+    <label>&nbsp;</label><input type="submit" value="{% trans 'Log in' %}">
+  </div>
   </form>
-  
-  <br>
-  
-  First time using the system or forgot your password? 
-  <a href="/password_reset">Click here</a>.
+</div>
   
   
 {% endblock %}
+

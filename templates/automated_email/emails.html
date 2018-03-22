@@ -6,8 +6,16 @@
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}">
 {% endblock %}
 
-{% block content %}
 
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; Send automated emails
+</div>
+{% endblock %}
+
+
+{% block content %}
 <script>
 function updateList(o) {
     var list = document.getElementById("id_recipients_list");
@@ -48,5 +56,4 @@ function updateList(o) {
     </table>
     <input type="submit" value="Send"/>
 </form>
-
 {% endblock %}

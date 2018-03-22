@@ -14,6 +14,12 @@ class NewSemesterView(FormView):
     form_class = NewSemesterForm
     success_url = "/admin"
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['has_permission'] = True
+        context['site_url'] = '/'
+        return context
+    
     def form_valid(self, form):
         year = form.cleaned_data['year']
         term = form.cleaned_data['term']

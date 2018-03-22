@@ -12,6 +12,11 @@ class EmailsView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # required for welcome message
+        context = super().get_context_data(**kwargs)
+        context['has_permission'] = True
+        context['site_url'] = '/'
+        
         context_all = User.objects.all()
         context_all = [str(t.id) for t in context_all]
         context['all'] = context_all
@@ -24,7 +29,7 @@ class EmailsView(FormView):
                      break
         context['unsubmited'] = context_unsubmited
         
-        context['assigned'] = [str(t.id) 
+        context['assigned'] = [str(t) 
             for t in Assessment.objects.values_list(
                 'teacher', 
                 flat=True

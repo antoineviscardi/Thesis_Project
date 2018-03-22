@@ -1,7 +1,16 @@
 {% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; Export data
+</div>
+{% endblock %}
+
 
 {% block content %}
-
 <h1>Export data</h1>
 <form action="" method="post">
     {% csrf_token %}
@@ -10,5 +19,4 @@
     </table>
     <input type="submit" value="Export"/>
 <form>
-
 {% endblock %}
