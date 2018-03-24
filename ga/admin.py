@@ -28,14 +28,8 @@ class MyAdminSite(AdminSite):
 
     
 class MyUserAdmin(UserAdmin):
-    fieldsets = (
-        (None, {
-            'fields': ('username','password')
-        }),
-        ('Personal info', {
-            'fields': ('first_name', 'last_name', 'email')
-        })
-    )
+    pass
+    
     
 
 MyUserAdmin.add_form = MyUserCreationForm

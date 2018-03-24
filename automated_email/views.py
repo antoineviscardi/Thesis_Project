@@ -3,6 +3,8 @@ from .forms import EmailsForm
 from django import forms
 from ga.models import Assessment
 from django.contrib.auth.models import User
+from gams.settings import EMAIL_HOST_USER
+from django.core import mail
 
 class EmailsView(FormView):
     template_name = 'automated_email/emails.html'
@@ -47,13 +49,16 @@ class EmailsView(FormView):
         emails = [(
             object_line, 
             message.replace(
-                '{{username}}',r.user.username
+                '{{username}}',r.username
             ),
             EMAIL_HOST_USER,
-            (r.user.email,)
-        ) for r in form.cleaned_data['recipients_list']]   
+            (r.email,)
+        ) for r in form.cleaned_data['recipients_list']] 
         
-        send_mass_mail(emails, fail_silently=False)
+        print(form.cleaned_data['recipients_list'])
+        print(emails)  
+        
+        mail.send_mass_mail(emails, fail_silently=False)
         
         return super().form_valid(form)
         

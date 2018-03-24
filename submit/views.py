@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from ga.models import Assessment, Course, SemesterLU, AssessmentMethod
+from ga.models import Assessment, Course, SemesterLU, AssessmentMethod, Indicator
 from ga.forms import AssessmentForm
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
@@ -34,24 +34,59 @@ class CourseDetailView(DetailView):
         
         context['has_permission'] = True
         
-        ams = AssessmentMethod.objects.all().filter(
-            course=self.object
+        context['introduced'] = Indicator.objects.filter(
+            introduced__in=[self.object.id],
+            current_flag=True
         )
         
-        assessments = [
-            am.assessment_set.all().filter(
-                teacher=self.request.user,
-                semester=SemesterLU.objects.latest()
-            ) for am in ams
+        context['taught'] = Indicator.objects.filter(
+            taught__in=[self.object.id],
+            current_flag=True
+        )
+        
+        context['utilized'] = Indicator.objects.filter(
+            used__in=[self.object.id],
+            current_flag=True
+        )
+        
+        assessed = Indicator.objects.filter(
+            assessed__in=[self.object.id],
+            current_flag=True
+        )
+        context['assessed'] = assessed
+        
+        ams_list = [
+            i.assessmentmethod_set.all() for i in assessed
         ]
         
-        apks = [[a.pk for a in _a] for _a in assessments]
-        forms = [[AssessmentForm(instance=a) for a in _a] for _a in assessments]
+        ass_list = [[
+            Assessment.objects.filter(
+                teacher=self.request.user,
+                semester=SemesterLU.objects.latest(),
+                assessmentMethod=am
+            ) for am in am_list ] for am_list in ams_list
+        ]
         
-        forms_apks_zip = [zip(f,a) for f,a in zip(forms, apks)]
         
-        context['list'] = zip(ams, forms_apks_zip)
+        tables = []
         
+        for indicator in assessed:
+            for am in indicator.assessmentmethod_set.filter(current_flag=True): 
+                for a in am.assessment_set.filter(
+                    teacher=self.request.user,
+                    semester=SemesterLU.objects.latest(),
+                ):
+                    tables.append((
+                        indicator, 
+                        am, 
+                        a, 
+                        a.program, 
+                        AssessmentForm(instance=a),
+                        a.pk
+                    ))
+                
+        context['tables'] = tables
+      
         return context 
     
     def post(self, request, *args, **kwargs):
@@ -60,7 +95,7 @@ class CourseDetailView(DetailView):
         form = AssessmentForm(request.POST, instance=instance)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect('')
+            return HttpResponseRedirect('/submit/')
             
         
         

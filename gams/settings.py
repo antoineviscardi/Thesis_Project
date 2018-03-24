@@ -90,6 +90,9 @@ DATABASES = {
     }
 }
 
+# Backups
+
+
 
 # Email
 EMAIL_HOST = 'smtp.gmail.com'
