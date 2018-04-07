@@ -46,6 +46,7 @@ class CourseAdmin(admin.ModelAdmin):
     actions = ('cease_selected',)
     filter_horizontal = ('teachers',)
     exclude = ('current_flag',)
+    search_fields = ('code',)
     
     def get_queryset(self, request):
         qs = super(CourseAdmin, self).get_queryset(request)
@@ -73,6 +74,7 @@ class CourseAdmin(admin.ModelAdmin):
 class AssessmentMethodAdmin(admin.ModelAdmin):
     exclude = ('current_flag',)
     actions = ('cease_selected',)
+    autocomplete_fields = ('indicator', 'course')
     list_display=(
         'pk', 'indicator', 'course', 
         'time_year', 'time_semester'
@@ -113,6 +115,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     filter_horizontal = ('introduced', 'taught', 'used')
     actions = ['cease_selected']
     exclude = ('current_flag',)
+    search_fields = ('code',)
     
     def get_queryset(self, request):
         qs = super(IndicatorAdmin, self).get_queryset(request)

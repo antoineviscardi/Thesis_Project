@@ -5,4 +5,4 @@ source /home/gams/gams/bin/activate && /home/gams/gams/manage.py dumpdata > /hom
 # VERY DANGEROUS COMMAND! DO NOT CHANGE PATH!
 ls /home/gams/gams/backups/daily -t -d $PWD/* | tail -n +3 | xargs rm --
 
-
+echo $PATH > /tmp/path.txt

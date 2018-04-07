@@ -85,6 +85,9 @@ class AssessmentMethod(models.Model):
     expectation1 = models.TextField(max_length=1000)
     current_flag = models.BooleanField(default=True)
     
+    def __str__(self):
+        return str(self.indicator) + ' : ' + str(self.course)
+    
     def save(self, *args, **kwargs):
         try:
             am = AssessmentMethod.objects.get(

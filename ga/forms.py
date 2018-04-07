@@ -65,7 +65,7 @@ class AssessmentMethodForm(forms.ModelForm):
             am = AssessmentMethod.objects.get(
                 indicator = self.cleaned_data['indicator'],
                 course = self.cleaned_data['course'],
-                criteria = self.cleaned_data['criteria'],
+                criteria = self.cleaned_data['assessment_medium'],
                 expectation4 = self.cleaned_data['expectation4'],
                 expectation3 = self.cleaned_data['expectation3'],
                 expectation2 = self.cleaned_data['expectation2'],
@@ -79,6 +79,8 @@ class AssessmentMethodForm(forms.ModelForm):
                     'This Assessment method already exists.'
                 )
         except AssessmentMethod.DoesNotExist:
+            pass
+        except KeyError:
             pass
         
         return self.cleaned_data
