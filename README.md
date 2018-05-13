@@ -51,6 +51,9 @@ Django offers built-in backups functionalities. The command `python manage.py du
 
 Small scrypts found in `~/gams/backups/`) were written to perform daily, weekly and monthly backups. In order to automate the process, these were linked to cron jobs set to run daily, weekly and monthl respectively.
 
-The command `crontab -e` will open the file where the cronjobs are secified.
+The command `crontab -e` will open the file where the cronjobs are specified.
 
+##Documentation
+The [Django documentation](https://docs.djangoproject.com/en/2.0/) is easy to access and very usefull. It was the primary source of information throughout the completion of that project. 
 
+https://docs.djangoproject.com/en/2.0/
