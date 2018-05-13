@@ -44,5 +44,13 @@ mysql -u root -p
 gams1234
 use gams_db
 ```
+From there, SQL commands can be issued to interact with the database and perform queries.
+
+## Backups
+Django offers built-in backups functionalities. The command `python manage.py dumpdata` will output a JSON formated dump of all the data. Such a dump can be restored using the command `python manage.py loaddata [path]`.
+
+Small scrypts found in `~/gams/backups/`) were written to perform daily, weekly and monthly backups. In order to automate the process, these were linked to cron jobs set to run daily, weekly and monthl respectively.
+
+The command `crontab -e` will open the file where the cronjobs are secified.
 
 
