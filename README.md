@@ -9,6 +9,18 @@ MySQL 1.3.12
 XlsWriter 1.0.2
 ```
 
+## Starting the server
+A small python server can be started using the following commands.
+Entering the virtual environment:
+```
+cd gams
+source bin/activate
+```
+Starting the server:
+```
+python manage.py runserver
+```
+
 ## Configuration
 Django's configurations can be found in the file `~/gams/gams/settings.py`. The file is well documented but here is a description of the most important parts.
 
