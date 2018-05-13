@@ -53,7 +53,7 @@ Small scrypts found in `~/gams/backups/`) were written to perform daily, weekly 
 
 The command `crontab -e` will open the file where the cronjobs are specified.
 
-##Documentation
+## Documentation
 The [Django documentation](https://docs.djangoproject.com/en/2.0/) is easy to access and very usefull. It was the primary source of information throughout the completion of that project. 
 
 https://docs.djangoproject.com/en/2.0/
